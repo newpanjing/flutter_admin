@@ -211,10 +211,10 @@ class _SidebarMenuState extends State<SidebarMenu> {
                           Expanded(
                             child: Text(
                               group.title,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Colors.white70,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
                                 letterSpacing: 0.8,
                               ),
                             ),
