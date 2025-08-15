@@ -16,6 +16,10 @@ class _ProductDataTableState extends State<ProductDataTable> {
   bool _sortAscending = true;
   int _currentPage = 0;
   final int _rowsPerPage = 10;
+  String _selectedCategory = '全部类别';
+  
+  // 类别选项
+  final List<String> _categories = ['全部类别', '电子产品', '服装', '食品', '图书'];
 
   int get _totalPages => (_filteredProducts.length / _rowsPerPage).ceil();
 
@@ -23,7 +27,6 @@ class _ProductDataTableState extends State<ProductDataTable> {
   void initState() {
     super.initState();
     _loadMockData();
-    _searchController.addListener(_onSearchChanged);
   }
 
   @override
@@ -93,19 +96,32 @@ class _ProductDataTableState extends State<ProductDataTable> {
     _filteredProducts = List.from(_products);
   }
 
-  void _onSearchChanged() {
+  void _performSearch() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      if (query.isEmpty) {
-        _filteredProducts = List.from(_products);
-      } else {
-        _filteredProducts = _products.where((product) {
-          return product.name.toLowerCase().contains(query) ||
-                 product.category.toLowerCase().contains(query) ||
-                 product.description.toLowerCase().contains(query);
-        }).toList();
-      }
+      _filteredProducts = _products.where((product) {
+        // 文本搜索条件
+        bool matchesText = query.isEmpty ||
+            product.name.toLowerCase().contains(query) ||
+            product.category.toLowerCase().contains(query) ||
+            product.description.toLowerCase().contains(query);
+        
+        // 类别筛选条件
+        bool matchesCategory = _selectedCategory == '全部类别' ||
+            product.category == _selectedCategory;
+        
+        return matchesText && matchesCategory;
+      }).toList();
       _currentPage = 0; // 重置到第一页
+    });
+  }
+  
+  void _resetSearch() {
+    setState(() {
+      _searchController.clear();
+      _selectedCategory = '全部类别';
+      _filteredProducts = List.from(_products);
+      _currentPage = 0;
     });
   }
 
@@ -201,7 +217,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
             
             // 搜索栏
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -213,14 +229,95 @@ class _ProductDataTableState extends State<ProductDataTable> {
                   ),
                 ],
               ),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: '搜索商品名称、类别或描述...',
-                  prefixIcon: Icon(Icons.search, color: Color(0xFF1976D2)),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 16),
-                ),
+              child: Row(
+                children: [
+                  // 搜索输入框
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        hintText: '搜索商品名称、类别或描述...',
+                        prefixIcon: Icon(Icons.search, color: Color(0xFF1976D2)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide(color: Color(0xFF1976D2)),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // 类别下拉选择
+                  Expanded(
+                    flex: 2,
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: '类别',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                          borderSide: BorderSide(color: Color(0xFF1976D2)),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      ),
+                      items: _categories.map((String category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedCategory = newValue;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // 搜索按钮
+                  ElevatedButton.icon(
+                    onPressed: _performSearch,
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text('搜索'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1976D2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  
+                  // 重置按钮
+                  OutlinedButton.icon(
+                    onPressed: _resetSearch,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text('重置'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF1976D2),
+                      side: const BorderSide(color: Color(0xFF1976D2)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -709,7 +806,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
                     } else {
                       _products.add(newProduct);
                     }
-                    _onSearchChanged(); // 重新过滤数据
+                    _performSearch(); // 重新过滤数据
                   });
 
                   Navigator.of(context).pop();
@@ -782,7 +879,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
             onPressed: () {
               setState(() {
                 _products.removeWhere((p) => p.id == product.id);
-                _onSearchChanged(); // 重新过滤数据
+                _performSearch(); // 重新过滤数据
               });
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(

@@ -7,6 +7,7 @@ import '../widgets/settings_dialog.dart';
 import '../widgets/notification_dialog.dart';
 import '../routes/app_router.dart';
 import '../models/menu_model.dart';
+import '../models/user_model.dart';
 import '../services/api_service.dart';
 import 'vip_page.dart';
 
@@ -23,6 +24,7 @@ class _MainLayoutState extends State<MainLayout> {
   bool _isCollapsed = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   MenuConfig? _menuConfig;
+  UserModel? _currentUser;
 
   @override
   void initState() {
