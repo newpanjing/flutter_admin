@@ -1,5 +1,7 @@
 # Flutter Admin Web Template
 
+[中文版本 / Chinese Version](README_zh.md)
+
 A Flutter web project with admin dashboard functionality and custom UI components.
 
 ## Preview Screenshots
