@@ -10,6 +10,7 @@ class MenuConfig {
   });
 
   factory MenuConfig.fromJson(Map<String, dynamic> json) {
+    var data = json['data'] ?? {};
     return MenuConfig(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
@@ -18,11 +19,7 @@ class MenuConfig {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'success': success,
-      'message': message,
-      'data': data.toJson(),
-    };
+    return {'success': success, 'message': message, 'data': data.toJson()};
   }
 }
 
@@ -30,10 +27,7 @@ class MenuData {
   final String siteName;
   final List<MenuItemConfig> menus;
 
-  MenuData({
-    required this.siteName,
-    required this.menus,
-  });
+  MenuData({required this.siteName, required this.menus});
 
   factory MenuData.fromJson(Map<String, dynamic> json) {
     return MenuData(

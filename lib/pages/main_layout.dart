@@ -49,6 +49,7 @@ class _MainLayoutState extends State<MainLayout> {
     {'name': '仪表板', 'route': '/dashboard', 'category': '首页'},
     {'name': '用户管理', 'route': '/users', 'category': '系统管理'},
     {'name': '系统设置', 'route': '/system', 'category': '系统管理'},
+    {'name': '菜单调试', 'route': '/menu-debug', 'category': '系统管理'},
     {'name': '客户管理', 'route': '/customers', 'category': '业务管理'},
     {'name': '商品管理', 'route': '/products', 'category': '业务管理'},
     {'name': '订单管理', 'route': '/business/orders', 'category': '业务管理'},

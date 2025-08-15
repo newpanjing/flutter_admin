@@ -8,6 +8,7 @@ import '../pages/main_layout.dart';
 import '../pages/menu_debug_page.dart';
 import '../pages/not_found_page.dart';
 import '../pages/vip_page.dart';
+import '../widgets/data_table.dart';
 import '../services/api_service.dart';
 
 class AppRouter {
@@ -34,26 +35,41 @@ class AppRouter {
 
   /// 根据菜单配置创建动态路由
   static List<GoRoute> _createDynamicRoutes(List<MenuItemConfig> menus) {
-    return menus.map((menu) {
-      // 将URL转换为路由路径
-      String routePath = _convertUrlToRoute(menu.url);
-      String routeName = _generateRouteName(menu.name);
-
-      return GoRoute(
-        path: routePath,
-        name: routeName,
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: state.pageKey,
-          child:  Text(
-                    '路径: ${state.matchedLocation}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-        ),
-      );
-    }).toList();
+    List<GoRoute> routes = [];
+    
+    for (var menu in menus) {
+      // 递归处理当前菜单项及其子菜单
+      routes.addAll(_createRoutesFromMenu(menu));
+    }
+    
+    return routes;
+  }
+  
+  /// 递归创建单个菜单项及其子菜单的路由
+  static List<GoRoute> _createRoutesFromMenu(MenuItemConfig menu) {
+    List<GoRoute> routes = [];
+    
+    // 为当前菜单项创建路由
+    String routePath = _convertUrlToRoute(menu.url);
+    String routeName = _generateRouteName(menu.name);
+    
+    routes.add(GoRoute(
+      path: routePath,
+      name: routeName,
+      pageBuilder: (context, state) => NoTransitionPage(
+        key: state.pageKey,
+        child: const ProductDataTable(),
+      ),
+    ));
+    
+    // 递归处理子菜单
+    if (menu.children.isNotEmpty) {
+      for (var child in menu.children) {
+        routes.addAll(_createRoutesFromMenu(child));
+      }
+    }
+    
+    return routes;
   }
 
   /// 将API URL转换为Flutter路由路径
@@ -160,13 +176,23 @@ class AppRouter {
                 NoTransitionPage(key: state.pageKey, child: const VipPage()),
           ),
 
+          // 商品管理
+          GoRoute(
+            path: '/products',
+            name: 'products',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const ProductDataTable(),
+            ),
+          ),
+
           // 菜单调试页面
           GoRoute(
             path: '/menu-debug',
             name: 'menuDebug',
             pageBuilder: (context, state) => NoTransitionPage(
               key: state.pageKey,
-              child: MainLayout(child: const MenuDebugPage()),
+              child: const MenuDebugPage(),
             ),
           ),
 
@@ -179,9 +205,7 @@ class AppRouter {
               print("动态路由：${_dynamicRoutes}");
               return NoTransitionPage(
                 key: state.pageKey,
-                child: MainLayout(
-                  child: NotFoundPage(path: state.matchedLocation),
-                ),
+                child: NotFoundPage(path: state.matchedLocation),
               );
             },
           ),

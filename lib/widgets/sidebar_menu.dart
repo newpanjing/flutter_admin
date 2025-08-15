@@ -74,6 +74,11 @@ class _SidebarMenuState extends State<SidebarMenu> {
               icon: FontAwesomeIcons.chartLine,
               route: '/dashboard',
             ),
+              MenuItem(
+              title: '菜单调试',
+              icon: FontAwesomeIcons.bug,
+              route: '/menu-debug',
+            ),
           ],
         ),
       ];
@@ -153,6 +158,22 @@ class _SidebarMenuState extends State<SidebarMenu> {
             title: '仪表板',
             icon: FontAwesomeIcons.chartLine,
             route: '/dashboard',
+          ),
+        ],
+      ),
+      MenuGroup(
+        title: '系统管理',
+        icon: FontAwesomeIcons.cog,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        items: [
+          MenuItem(
+            title: '菜单调试',
+            icon: FontAwesomeIcons.bug,
+            route: '/menu-debug',
           ),
         ],
       ),
