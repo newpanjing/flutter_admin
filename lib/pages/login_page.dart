@@ -66,7 +66,12 @@ class _LoginPageState extends State<LoginPage> {
           
           AppRouter.setLoginStatus(true);
           if (mounted) {
-            context.go('/dashboard');
+            // 获取之前保存的路由位置，如果没有则跳转到dashboard
+            final lastLocation = AppRouter.getLastKnownLocation();
+            final targetLocation = (lastLocation != null && lastLocation != '/login') 
+                ? lastLocation 
+                : '/dashboard';
+            context.go(targetLocation);
           }
         } else {
           // Token无效，清除本地存储
@@ -122,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
           await prefs.setString('email', loginResponse.user!.email);
         }
         
-        // 设置登录状态并跳转到仪表板
+        // 设置登录状态并跳转到仪表板或之前保存的页面
         AppRouter.setLoginStatus(true);
         if (mounted) {
           // 显示成功消息
@@ -132,7 +137,12 @@ class _LoginPageState extends State<LoginPage> {
               backgroundColor: AppTheme.successGreen,
             ),
           );
-          context.go('/dashboard');
+          // 获取之前保存的路由位置，如果没有则跳转到dashboard
+          final lastLocation = AppRouter.getLastKnownLocation();
+          final targetLocation = (lastLocation != null && lastLocation != '/login') 
+              ? lastLocation 
+              : '/dashboard';
+          context.go(targetLocation);
         }
       } else {
         // 登录失败，显示错误信息

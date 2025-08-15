@@ -317,7 +317,130 @@ class _ProductDataTableState extends State<ProductDataTable> {
     });
   }
   
-  // 导出功能
+  // 根据格式导出数据
+   void _exportDataWithFormat(String format) {
+     late String formatName;
+     late String fileExtension;
+     late IconData formatIcon;
+    
+    switch (format) {
+      case 'xlsx':
+        formatName = 'Excel';
+        fileExtension = '.xlsx';
+        formatIcon = Icons.table_chart;
+        break;
+      case 'csv':
+        formatName = 'CSV';
+        fileExtension = '.csv';
+        formatIcon = Icons.description;
+        break;
+      case 'json':
+        formatName = 'JSON';
+        fileExtension = '.json';
+        formatIcon = Icons.code;
+        break;
+      case 'txt':
+        formatName = 'TXT';
+        fileExtension = '.txt';
+        formatIcon = Icons.text_snippet;
+        break;
+      default:
+        formatName = 'Excel';
+        fileExtension = '.xlsx';
+        formatIcon = Icons.table_chart;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.file_download_outlined, color: const Color(0xFF1976D2)),
+            const SizedBox(width: 8),
+            Text('导出为 $formatName 格式'),
+          ],
+        ),
+        content: SizedBox(
+          width: 350,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(formatIcon, color: const Color(0xFF1976D2)),
+                    const SizedBox(width: 8),
+                    Text('文件格式：$formatName ($fileExtension)', 
+                         style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('导出范围：', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Color(0xFF1976D2), size: 16),
+                        const SizedBox(width: 8),
+                        Text('当前筛选数据 (${_filteredProducts.length} 条)'),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.radio_button_unchecked, color: Colors.grey, size: 16),
+                        const SizedBox(width: 8),
+                        Text('全部数据 (${_products.length} 条)', style: const TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // 模拟导出成功
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('导出成功！已导出为 $formatName 格式，共 ${_filteredProducts.length} 条数据'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+            ),
+            child: const Text('开始导出'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 导出功能（保留原有方法以兼容）
   void _exportData() {
     showDialog(
       context: context,
@@ -833,17 +956,68 @@ class _ProductDataTableState extends State<ProductDataTable> {
                   ),
                   const SizedBox(width: 8),
                   
-                  // 导出按钮
-                  OutlinedButton.icon(
-                    onPressed: _exportData,
-                    icon: const Icon(Icons.file_download_outlined, size: 18),
-                    label: const Text('导出'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF1976D2),
-                      side: const BorderSide(color: Color(0xFF1976D2)),
+                  // 导出下拉菜单
+                  PopupMenuButton<String>(
+                    onSelected: (String format) {
+                      _exportDataWithFormat(format);
+                    },
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'xlsx',
+                        child: Row(
+                          children: [
+                            Icon(Icons.table_chart, size: 16, color: Color(0xFF1976D2)),
+                            SizedBox(width: 8),
+                            Text('导出为 Excel (.xlsx)'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'csv',
+                        child: Row(
+                          children: [
+                            Icon(Icons.description, size: 16, color: Color(0xFF1976D2)),
+                            SizedBox(width: 8),
+                            Text('导出为 CSV (.csv)'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'json',
+                        child: Row(
+                          children: [
+                            Icon(Icons.code, size: 16, color: Color(0xFF1976D2)),
+                            SizedBox(width: 8),
+                            Text('导出为 JSON (.json)'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'txt',
+                        child: Row(
+                          children: [
+                            Icon(Icons.text_snippet, size: 16, color: Color(0xFF1976D2)),
+                            SizedBox(width: 8),
+                            Text('导出为 TXT (.txt)'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF1976D2)),
                         borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.file_download_outlined, size: 18, color: Color(0xFF1976D2)),
+                          SizedBox(width: 8),
+                          Text('导出', style: TextStyle(color: Color(0xFF1976D2))),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_drop_down, size: 18, color: Color(0xFF1976D2)),
+                        ],
                       ),
                     ),
                   ),

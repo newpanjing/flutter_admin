@@ -9,6 +9,7 @@ import '../routes/app_router.dart';
 import '../models/menu_model.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
+import '../utils/route_state_manager.dart';
 import 'vip_page.dart';
 
 class MainLayout extends StatefulWidget {
@@ -136,6 +137,13 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // 监听路由变化并保存状态
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentLocation = GoRouterState.of(context).matchedLocation;
+      AppRouter.saveCurrentLocation(currentLocation);
+      RouteStateManager.saveRouteState(currentLocation);
+    });
+    
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.contentBackground,

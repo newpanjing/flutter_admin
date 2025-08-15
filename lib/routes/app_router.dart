@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/menu_model.dart';
 import '../pages/dashboard_page.dart';
@@ -7,13 +8,53 @@ import '../pages/login_page.dart';
 import '../pages/main_layout.dart';
 import '../pages/menu_debug_page.dart';
 import '../pages/not_found_page.dart';
+import '../pages/test_hot_reload_page.dart';
 import '../pages/vip_page.dart';
 import '../widgets/data_table.dart';
 import '../services/api_service.dart';
 
+/// 路由刷新通知器，用于监听路由变化
+class _RouterRefreshNotifier extends ChangeNotifier {
+  // 这个类主要用于GoRouter的refreshListenable参数
+  // 当需要刷新路由时可以调用notifyListeners()
+}
+
 class AppRouter {
   static bool _isLoggedIn = false;
   static List<GoRoute> _dynamicRoutes = [];
+  static String? _lastKnownLocation;
+  
+  /// 保存当前路由位置
+  static void saveCurrentLocation(String location) {
+    _lastKnownLocation = location;
+    // 异步保存到本地存储
+    _saveLocationToStorage(location);
+  }
+  
+  /// 将路由位置保存到本地存储
+  static Future<void> _saveLocationToStorage(String location) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_route_location', location);
+    } catch (e) {
+      // 忽略保存错误
+      print('Failed to save route location: $e');
+    }
+  }
+  
+  /// 获取上次保存的路由位置
+  static String? getLastKnownLocation() {
+    return _lastKnownLocation;
+  }
+  
+  /// 获取初始路由位置
+  static String _getInitialLocation() {
+    // 如果有保存的路由位置且用户已登录，则恢复到该位置
+    if (_lastKnownLocation != null && _isLoggedIn && _lastKnownLocation != '/login') {
+      return _lastKnownLocation!;
+    }
+    return '/login';
+  }
 
   static void setLoginStatus(bool status) {
     _isLoggedIn = status;
@@ -142,7 +183,11 @@ class AppRouter {
   }
 
   static GoRouter get router => GoRouter(
-    initialLocation: '/login',
+    initialLocation: _getInitialLocation(),
+    // 启用状态恢复，保持hot reload后的页面状态
+    restorationScopeId: 'app',
+    // 添加路由监听器，保存当前路由状态
+    refreshListenable: _RouterRefreshNotifier(),
     routes: [
       
       // 登录页
@@ -196,6 +241,16 @@ class AppRouter {
             ),
           ),
 
+          // Hot Reload 测试页面
+          GoRoute(
+            path: '/test-hot-reload',
+            name: 'testHotReload',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const TestHotReloadPage(),
+            ),
+          ),
+
           // 404错误页面 - 通配符路由，必须放在最后
           GoRoute(
             path: '/:path(.*)',
@@ -215,17 +270,27 @@ class AppRouter {
 
     // 路由重定向
     redirect: (context, state) {
+      // 保存当前路由位置
+      saveCurrentLocation(state.matchedLocation);
+      
       // 检查用户是否已登录
-      // 这里可以添加实际的登录状态检查逻辑
       final isLoggedIn = _checkLoginStatus();
       final isLoginPage = state.matchedLocation == '/login';
+      
+      // 在开发模式下，如果当前位置不是登录页且有保存的路由状态，
+      // 说明可能是hot reload，保持当前页面
+      if (!isLoginPage && _lastKnownLocation != null && 
+          _lastKnownLocation == state.matchedLocation) {
+        return null; // 保持当前页面，不进行重定向
+      }
 
       if (!isLoggedIn && !isLoginPage) {
         return '/login';
       }
 
       if (isLoggedIn && isLoginPage) {
-        return '/dashboard';
+        // 如果有保存的路由位置，恢复到该位置，否则跳转到dashboard
+        return _lastKnownLocation ?? '/dashboard';
       }
 
       return null;
