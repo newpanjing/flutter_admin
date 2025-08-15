@@ -30,170 +30,279 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 现代化页面标题
+            _buildModernHeader(context),
+            const SizedBox(height: 40),
+            
+            // 主要内容区域
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 左侧配置面板
+                Expanded(
+                  flex: 2,
+                  child: _buildConfigurationPanel(),
+                ),
+                const SizedBox(width: 32),
+                // 右侧系统信息面板
+                Expanded(
+                  flex: 1,
+                  child: _buildSystemInfoPanel(context),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // 现代化页面标题
+  Widget _buildModernHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryBlue.withOpacity(0.1),
+            AppTheme.successGreen.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryBlue.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
         children: [
-          // 页面标题
-          Row(
-            children: [
-              Icon(
-                Icons.settings,
-                size: 32,
-                color: AppTheme.primaryBlue,
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '系统管理',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '配置系统参数和基础设置',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.settings_applications,
+              size: 40,
+              color: AppTheme.primaryBlue,
+            ),
           ),
-          const SizedBox(height: 32),
-          
-          // 配置卡片网格
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 24,
-            mainAxisSpacing: 24,
-            childAspectRatio: 1.2,
-            children: [
-              _buildConfigCard(
-                title: '基本信息',
-                icon: Icons.info_outline,
-                color: AppTheme.primaryBlue,
-                onTap: () => _showBasicInfoDialog(),
-              ),
-              _buildConfigCard(
-                title: '安全设置',
-                icon: Icons.security,
-                color: AppTheme.successGreen,
-                onTap: () => _showSecurityDialog(),
-              ),
-              _buildConfigCard(
-                title: '通知设置',
-                icon: Icons.notifications_outlined,
-                color: AppTheme.warningYellow,
-                onTap: () => _showNotificationDialog(),
-              ),
-              _buildConfigCard(
-                title: '备份设置',
-                icon: Icons.backup,
-                color: const Color(0xFF4CAF50), // 替换紫色为绿色
-                onTap: () => _showBackupDialog(),
-              ),
-              _buildConfigCard(
-                title: '日志设置',
-                icon: Icons.description_outlined,
-                color: Colors.orange,
-                onTap: () => _showLogDialog(),
-              ),
-              _buildConfigCard(
-                title: '系统监控',
-                icon: Icons.monitor,
-                color: Colors.teal,
-                onTap: () => _showMonitorDialog(),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 32),
-          
-          // 系统信息卡片
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.computer,
-                        color: AppTheme.primaryBlue,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '系统信息',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+          const SizedBox(width: 24),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '系统管理中心',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow('系统名称', _systemConfig['systemName']),
-                  _buildInfoRow('系统版本', _systemConfig['systemVersion']),
-                  _buildInfoRow('公司名称', _systemConfig['companyName']),
-                  _buildInfoRow('联系电话', _systemConfig['companyPhone']),
-                  _buildInfoRow('联系邮箱', _systemConfig['companyEmail']),
-                  _buildInfoRow('服务器时间', DateTime.now().toString().substring(0, 19)),
-                  _buildInfoRow('运行时长', '15天 8小时 32分钟'),
-                  _buildInfoRow('在线用户', '12'),
-                ],
-              ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '统一管理系统配置、安全设置、监控状态等核心功能',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 快速操作按钮
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.successGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.refresh,
+              color: AppTheme.successGreen,
+              size: 24,
             ),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildConfigCard({
+
+  // 配置面板
+  Widget _buildConfigurationPanel() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 面板标题
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.tune,
+                  color: AppTheme.primaryBlue,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '配置管理',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 配置项列表
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+            child: Column(
+              children: [
+                _buildModernConfigItem(
+                  title: '基本信息设置',
+                  subtitle: '系统名称、公司信息等基础配置',
+                  icon: Icons.info_outline,
+                  color: AppTheme.primaryBlue,
+                  onTap: () => _showBasicInfoDialog(),
+                ),
+                const SizedBox(height: 16),
+                _buildModernConfigItem(
+                  title: '安全策略配置',
+                  subtitle: '会话超时、登录限制等安全设置',
+                  icon: Icons.security,
+                  color: AppTheme.successGreen,
+                  onTap: () => _showSecurityDialog(),
+                ),
+                const SizedBox(height: 16),
+                _buildModernConfigItem(
+                  title: '通知服务管理',
+                  subtitle: '邮件、短信等通知渠道配置',
+                  icon: Icons.notifications_outlined,
+                  color: AppTheme.warningYellow,
+                  onTap: () => _showNotificationDialog(),
+                ),
+                const SizedBox(height: 16),
+                _buildModernConfigItem(
+                  title: '数据备份策略',
+                  subtitle: '自动备份、备份间隔等设置',
+                  icon: Icons.backup,
+                  color: const Color(0xFF4CAF50),
+                  onTap: () => _showBackupDialog(),
+                ),
+                const SizedBox(height: 16),
+                _buildModernConfigItem(
+                  title: '日志管理配置',
+                  subtitle: '日志级别、存储大小等设置',
+                  icon: Icons.description_outlined,
+                  color: Colors.orange,
+                  onTap: () => _showLogDialog(),
+                ),
+                const SizedBox(height: 16),
+                _buildModernConfigItem(
+                  title: '系统监控面板',
+                  subtitle: '实时查看系统运行状态',
+                  icon: Icons.monitor_heart,
+                  color: Colors.teal,
+                  onTap: () => _showMonitorDialog(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 现代化配置项
+  Widget _buildModernConfigItem({
     required String title,
+    required String subtitle,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Card(
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+          child: Row(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(32),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   icon,
-                  size: 32,
                   color: color,
+                  size: 24,
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: color.withOpacity(0.6),
+                size: 16,
               ),
             ],
           ),
@@ -201,33 +310,243 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
       ),
     );
   }
+
+  // 系统信息面板
+  Widget _buildSystemInfoPanel(BuildContext context) {
+    return Column(
+      children: [
+        // 系统状态卡片
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.computer,
+                      color: AppTheme.successGreen,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '系统状态',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppTheme.successGreen,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '运行正常',
+                          style: TextStyle(
+                            color: AppTheme.successGreen,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildModernInfoRow('系统名称', _systemConfig['systemName'], Icons.computer),
+              _buildModernInfoRow('系统版本', _systemConfig['systemVersion'], Icons.info),
+              _buildModernInfoRow('公司名称', _systemConfig['companyName'], Icons.business),
+              _buildModernInfoRow('联系电话', _systemConfig['companyPhone'], Icons.phone),
+              _buildModernInfoRow('联系邮箱', _systemConfig['companyEmail'], Icons.email),
+              _buildModernInfoRow('服务器时间', DateTime.now().toString().substring(0, 19), Icons.access_time),
+              _buildModernInfoRow('运行时长', '15天 8小时 32分钟', Icons.timer),
+              _buildModernInfoRow('在线用户', '12', Icons.people),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        // 快速监控卡片
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.analytics,
+                      color: AppTheme.primaryBlue,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '快速监控',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildQuickMonitorItem('CPU使用率', '45%', AppTheme.successGreen, 0.45),
+              const SizedBox(height: 12),
+              _buildQuickMonitorItem('内存使用率', '68%', AppTheme.warningYellow, 0.68),
+              const SizedBox(height: 12),
+              _buildQuickMonitorItem('磁盘使用率', '32%', AppTheme.successGreen, 0.32),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _showMonitorDialog(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    '查看详细监控',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
   
-  Widget _buildInfoRow(String label, String value) {
+  // 现代化信息行
+  Widget _buildModernInfoRow(String label, String value, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
+          Icon(
+            icon,
+            size: 16,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Text(
               label,
               style: TextStyle(
                 color: AppColors.textSecondary,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-              ),
+          Text(
+            value,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // 快速监控项
+  Widget _buildQuickMonitorItem(String label, String value, Color color, double progress) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: color.withOpacity(0.1),
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+          minHeight: 6,
+        ),
+      ],
     );
   }
   
