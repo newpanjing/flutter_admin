@@ -19,6 +19,9 @@
 ### 管理页面
 ![管理页面](previews/page.png)
 
+### 管理页面
+![管理页面](previews/system.png)
+
 ## 功能特性
 
 - 现代化的Web管理界面

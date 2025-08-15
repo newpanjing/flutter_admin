@@ -19,6 +19,9 @@ A Flutter web project with admin dashboard functionality and custom UI component
 ### Management Pages
 ![Management Pages](previews/page.png)
 
+### System
+![System Pages](previews/system.png)
+
 ## Features
 
 - Modern web-based admin interface
