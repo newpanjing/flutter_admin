@@ -20,6 +20,10 @@ class _ProductDataTableState extends State<ProductDataTable> {
   
   // 类别选项
   final List<String> _categories = ['全部类别', '电子产品', '服装', '食品', '图书'];
+  
+  // 批量选择相关状态
+  Set<int> _selectedItems = <int>{};
+  bool _selectAll = false;
 
   int get _totalPages => (_filteredProducts.length / _rowsPerPage).ceil();
 
@@ -113,16 +117,458 @@ class _ProductDataTableState extends State<ProductDataTable> {
         return matchesText && matchesCategory;
       }).toList();
       _currentPage = 0; // 重置到第一页
+     });
+   }
+   
+   void _resetSearch() {
+     setState(() {
+       _searchController.clear();
+       _selectedCategory = '全部';
+       _filteredProducts = List.from(_products);
+     });
+   }
+  
+  // 批量选择相关方法
+  void _toggleSelectAll(bool? value) {
+    setState(() {
+      _selectAll = value ?? false;
+      if (_selectAll) {
+        _selectedItems = Set.from(List.generate(_filteredProducts.length, (index) => index));
+      } else {
+        _selectedItems.clear();
+      }
     });
   }
   
-  void _resetSearch() {
+  void _toggleItemSelection(int index) {
     setState(() {
-      _searchController.clear();
-      _selectedCategory = '全部类别';
-      _filteredProducts = List.from(_products);
-      _currentPage = 0;
+      if (_selectedItems.contains(index)) {
+        _selectedItems.remove(index);
+      } else {
+        _selectedItems.add(index);
+      }
+      _selectAll = _selectedItems.length == _filteredProducts.length;
     });
+  }
+  
+  // 批量删除
+  void _batchDelete() {
+    if (_selectedItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先选择要删除的商品')),
+      );
+      return;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认删除'),
+        content: Text('确定要删除选中的 ${_selectedItems.length} 个商品吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                // 按索引倒序删除，避免索引变化问题
+                final sortedIndices = _selectedItems.toList()..sort((a, b) => b.compareTo(a));
+                for (int index in sortedIndices) {
+                  if (index < _filteredProducts.length) {
+                    _products.remove(_filteredProducts[index]);
+                  }
+                }
+                _performSearch(); // 重新搜索以更新显示
+                _selectedItems.clear();
+                _selectAll = false;
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('删除成功')),
+              );
+            },
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 导入功能
+  void _importData() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.file_upload_outlined, color: Color(0xFF1976D2)),
+            SizedBox(width: 8),
+            Text('导入商品数据'),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '支持导入Excel文件(.xlsx, .xls)，请确保文件格式正确：',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('文件格式要求：', style: TextStyle(fontWeight: FontWeight.w600)),
+                    SizedBox(height: 4),
+                    Text('• 第一行为表头：商品名称、类别、价格、库存、描述'),
+                    Text('• 价格列请使用数字格式'),
+                    Text('• 库存列请使用整数格式'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                height: 100,
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFF1976D2), style: BorderStyle.solid),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_upload_outlined, size: 32, color: Color(0xFF1976D2)),
+                    SizedBox(height: 8),
+                    Text('点击选择文件或拖拽文件到此处', style: TextStyle(color: Color(0xFF1976D2))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // 模拟导入成功
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('导入成功！已添加 5 个商品'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              // 这里可以添加实际的导入逻辑
+              _addMockImportedProducts();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+            ),
+            child: const Text('开始导入'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 模拟添加导入的商品
+  void _addMockImportedProducts() {
+    final importedProducts = [
+      Product(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: '导入商品1',
+        category: '电子产品',
+        price: 299.99,
+        stock: 50,
+        unit: '件',
+        description: '通过Excel导入的商品',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      Product(
+        id: (DateTime.now().millisecondsSinceEpoch + 1).toString(),
+        name: '导入商品2',
+        category: '服装',
+        price: 199.99,
+        stock: 30,
+        unit: '件',
+        description: '通过Excel导入的商品',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ];
+    
+    setState(() {
+      _products.addAll(importedProducts);
+      _performSearch(); // 刷新显示
+    });
+  }
+  
+  // 导出功能
+  void _exportData() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.file_download_outlined, color: Color(0xFF1976D2)),
+            SizedBox(width: 8),
+            Text('导出商品数据'),
+          ],
+        ),
+        content: SizedBox(
+          width: 350,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('选择导出格式：', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF1976D2)),
+                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(0xFFE3F2FD),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.table_chart, color: Color(0xFF1976D2)),
+                          SizedBox(height: 4),
+                          Text('Excel (.xlsx)', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.description, color: Colors.grey),
+                          SizedBox(height: 4),
+                          Text('CSV (.csv)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('导出范围：', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Color(0xFF1976D2), size: 16),
+                        const SizedBox(width: 8),
+                        Text('当前页面数据 (${_filteredProducts.length} 条)'),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.radio_button_unchecked, color: Colors.grey, size: 16),
+                        const SizedBox(width: 8),
+                        Text('全部数据 (${_products.length} 条)', style: const TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // 模拟导出成功
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('导出成功！已导出 ${_filteredProducts.length} 条商品数据'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+            ),
+            child: const Text('开始导出'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 打印功能
+  void _printData() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.print_outlined, color: Color(0xFF1976D2)),
+            SizedBox(width: 8),
+            Text('打印商品列表'),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          height: 300,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('打印设置：', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.description, size: 16),
+                        const SizedBox(width: 8),
+                        Text('打印内容：当前筛选的商品列表 (${_filteredProducts.length} 条)'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      children: [
+                        Icon(Icons.format_size, size: 16),
+                        SizedBox(width: 8),
+                        Text('纸张大小：A4'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Row(
+                      children: [
+                        Icon(Icons.rotate_90_degrees_ccw, size: 16),
+                        SizedBox(width: 8),
+                        Text('方向：横向'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('打印预览：', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1976D2),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(8),
+                            topRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          '商品列表报表',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('打印时间：${DateTime.now().toString().substring(0, 19)}'),
+                              const SizedBox(height: 4),
+                              Text('商品总数：${_filteredProducts.length} 条'),
+                              const SizedBox(height: 8),
+                              const Text('包含字段：商品名称、类别、价格、库存、单位'),
+                              const SizedBox(height: 8),
+                              const Expanded(
+                                child: Center(
+                                  child: Icon(Icons.table_view, size: 48, color: Colors.grey),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // 模拟打印成功
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('打印任务已发送！共 ${_filteredProducts.length} 条商品数据'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+            ),
+            child: const Text('开始打印'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _sortData(String column) {
@@ -186,32 +632,14 @@ class _ProductDataTableState extends State<ProductDataTable> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 页面标题和操作栏
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  '商品管理',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1976D2),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _showAddProductDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('添加商品'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1976D2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
+            // 页面标题
+            const Text(
+              '商品管理',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1976D2),
+              ),
             ),
             const SizedBox(height: 24),
             
@@ -320,7 +748,125 @@ class _ProductDataTableState extends State<ProductDataTable> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            
+            // 操作按钮栏
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // 批量操作提示
+                  if (_selectedItems.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1976D2).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '已选择 ${_selectedItems.length} 项',
+                        style: const TextStyle(
+                          color: Color(0xFF1976D2),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  if (_selectedItems.isNotEmpty) const SizedBox(width: 16),
+                  
+                  // 新增按钮
+                  ElevatedButton.icon(
+                    onPressed: _showAddProductDialog,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('新增'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1976D2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  
+                  // 批量删除按钮
+                  ElevatedButton.icon(
+                    onPressed: _selectedItems.isNotEmpty ? _batchDelete : null,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('删除'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _selectedItems.isNotEmpty ? Colors.red : Colors.grey,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  
+                  // 导入按钮
+                  OutlinedButton.icon(
+                    onPressed: _importData,
+                    icon: const Icon(Icons.file_upload_outlined, size: 18),
+                    label: const Text('导入'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF1976D2),
+                      side: const BorderSide(color: Color(0xFF1976D2)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  
+                  // 导出按钮
+                  OutlinedButton.icon(
+                    onPressed: _exportData,
+                    icon: const Icon(Icons.file_download_outlined, size: 18),
+                    label: const Text('导出'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF1976D2),
+                      side: const BorderSide(color: Color(0xFF1976D2)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  
+                  // 打印按钮
+                  OutlinedButton.icon(
+                    onPressed: _printData,
+                    icon: const Icon(Icons.print_outlined, size: 18),
+                    label: const Text('打印'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF1976D2),
+                      side: const BorderSide(color: Color(0xFF1976D2)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             
             // 数据表格
             Expanded(
@@ -350,6 +896,15 @@ class _ProductDataTableState extends State<ProductDataTable> {
                       ),
                       child: Row(
                         children: [
+                          // 全选复选框
+                          Expanded(
+                            flex: 1,
+                            child: Checkbox(
+                              value: _selectAll,
+                              onChanged: _toggleSelectAll,
+                              activeColor: const Color(0xFF1976D2),
+                            ),
+                          ),
                           _buildHeaderCell('商品信息', 'name', flex: 3),
                           _buildHeaderCell('类别', 'category', flex: 2),
                           _buildHeaderCell('价格', 'price', flex: 2),
@@ -443,6 +998,17 @@ class _ProductDataTableState extends State<ProductDataTable> {
       ),
       child: Row(
         children: [
+          // 复选框
+          Expanded(
+            flex: 1,
+            child: Checkbox(
+              value: _selectedItems.contains(index),
+              onChanged: (bool? value) {
+                _toggleItemSelection(index);
+              },
+              activeColor: const Color(0xFF1976D2),
+            ),
+          ),
           // 商品名称
           Expanded(
             flex: 3,

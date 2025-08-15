@@ -30,6 +30,7 @@ class _MainLayoutState extends State<MainLayout> {
   void initState() {
     super.initState();
     _loadMenuConfig();
+    _loadCurrentUser();
   }
 
   Future<void> _loadMenuConfig() async {
@@ -43,6 +44,28 @@ class _MainLayoutState extends State<MainLayout> {
     } catch (e) {
       // 静默处理错误，不影响页面正常显示
       print('加载菜单配置失败: $e');
+    }
+  }
+
+  Future<void> _loadCurrentUser() async {
+    // 模拟获取当前登录用户信息
+    // 在实际项目中，这里应该从API或本地存储获取用户信息
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        _currentUser = UserModel(
+          id: 1,
+          username: 'admin',
+          name: '张三',
+          email: 'admin@example.com',
+          role: '系统管理员',
+          status: 'active',
+          isStaff: true,
+          isSuperuser: true,
+          createTime: DateTime.now().subtract(const Duration(days: 30)),
+          lastLogin: DateTime.now(),
+        );
+      });
     }
   }
 
@@ -362,7 +385,7 @@ class _MainLayoutState extends State<MainLayout> {
                           const SizedBox(width: 8),
                           // 管理员信息
                           PopupMenuButton<String>(
-                            offset: const Offset(-120, 40),
+                            offset: const Offset(-140, 50),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -377,7 +400,7 @@ class _MainLayoutState extends State<MainLayout> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '管理员',
+                                  _currentUser?.name ?? _currentUser?.username ?? '用户',
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
@@ -412,13 +435,13 @@ class _MainLayoutState extends State<MainLayout> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            '管理员',
+                                            _currentUser?.name ?? _currentUser?.username ?? '用户',
                                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                           Text(
-                                            'admin',
+                                            _currentUser?.role ?? _currentUser?.username ?? '',
                                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                               color: AppColors.textMuted,
                                             ),
