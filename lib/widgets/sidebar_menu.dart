@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import '../services/api_service.dart';
+import '../models/menu_model.dart';
 
 class SidebarMenu extends StatefulWidget {
   final bool isCollapsed;
@@ -13,160 +15,185 @@ class SidebarMenu extends StatefulWidget {
 
 class _SidebarMenuState extends State<SidebarMenu> {
   String? _expandedGroup;
+  List<MenuGroup> _menuGroups = [];
+  bool _isLoading = true;
+  String? _lastClickedRoute;
+  DateTime? _lastClickTime;
   
-  final List<MenuGroup> _menuGroups = [
-    MenuGroup(
-      title: '首页',
-      icon: FontAwesomeIcons.house,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+  @override
+  void initState() {
+    super.initState();
+    _loadMenus();
+  }
+  
+  void _handleMenuItemTap(String route) {
+    final now = DateTime.now();
+    
+    // 防抖：如果是同一个路由且点击间隔小于300ms，则忽略
+    if (_lastClickedRoute == route && 
+        _lastClickTime != null && 
+        now.difference(_lastClickTime!).inMilliseconds < 300) {
+      return;
+    }
+    
+    _lastClickedRoute = route;
+    _lastClickTime = now;
+    
+    // 使用Future.microtask来避免在build过程中调用setState
+    Future.microtask(() {
+      if (mounted) {
+        context.go(route);
+      }
+    });
+  }
+  
+  Future<void> _loadMenus() async {
+    try {
+      // 获取API菜单配置
+      final menuConfig = await ApiService.getMenuConfig();
+      
+      // 调试信息：打印获取到的菜单配置
+      print('菜单配置获取成功: ${menuConfig.data.menus.length} 个菜单组');
+      for (final menu in menuConfig.data.menus) {
+        print('菜单: ${menu.name}, URL: ${menu.url}, 子菜单数量: ${menu.children.length}');
+      }
+      
+      // 创建固定菜单组（仪表盘）
+      final fixedMenus = [
+        MenuGroup(
+          title: '首页',
+          icon: FontAwesomeIcons.house,
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          items: [
+            MenuItem(
+              title: '仪表板',
+              icon: FontAwesomeIcons.chartLine,
+              route: '/dashboard',
+            ),
+          ],
+        ),
+      ];
+      
+      // 创建动态菜单组
+      final dynamicMenus = _createDynamicMenuGroups(menuConfig.data.menus);
+      print('动态菜单组创建完成: ${dynamicMenus.length} 个菜单组');
+      
+      setState(() {
+        _menuGroups = [...fixedMenus, ...dynamicMenus];
+        _isLoading = false;
+      });
+    } catch (e) {
+      // 如果API调用失败，使用默认菜单
+      print('菜单配置获取失败: $e');
+      print('使用默认菜单配置');
+      setState(() {
+        _menuGroups = _getDefaultMenus();
+        _isLoading = false;
+      });
+    }
+  }
+  
+  List<MenuGroup> _createDynamicMenuGroups(List<MenuItemConfig> apiMenus) {
+    final List<MenuGroup> dynamicGroups = [];
+    
+    for (final apiMenu in apiMenus) {
+      // 扁平化嵌套菜单
+      final flatMenus = _flattenMenuItems(apiMenu);
+      
+      if (flatMenus.isNotEmpty) {
+        dynamicGroups.add(MenuGroup(
+          title: apiMenu.name,
+          icon: Icons.face,
+          items: flatMenus,
+        ));
+      }
+    }
+    
+    return dynamicGroups;
+  }
+  
+  List<MenuItem> _flattenMenuItems(MenuItemConfig menuConfig) {
+    List<MenuItem> items = [];
+    
+    // 如果有子菜单，只处理子菜单，不添加父级菜单项
+    if (menuConfig.children.isNotEmpty) {
+      for (final child in menuConfig.children) {
+        items.addAll(_flattenMenuItems(child));
+      }
+    } else {
+      // 只有叶子节点（没有子菜单的菜单项）才添加到菜单列表中
+      items.add(MenuItem(
+        title: menuConfig.name,
+        icon: Icons.face,
+        route: menuConfig.url,
+      ));
+    }
+    
+    return items;
+  }
+  
+  
+  List<MenuGroup> _getDefaultMenus() {
+    // 只保留仪表盘菜单，其他菜单项从API接口获取
+    return [
+      MenuGroup(
+        title: '首页',
+        icon: FontAwesomeIcons.house,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        items: [
+          MenuItem(
+            title: '仪表板',
+            icon: FontAwesomeIcons.chartLine,
+            route: '/dashboard',
+          ),
+        ],
       ),
-      items: [
-        MenuItem(
-          title: '仪表板',
-          icon: FontAwesomeIcons.chartLine,
-          route: '/dashboard',
-        ),
-      ],
-    ),
-    MenuGroup(
-      title: '系统管理',
-      icon: FontAwesomeIcons.gear,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF2196F3), Color(0xFF42A5F5)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      items: [
-        MenuItem(
-          title: '用户管理',
-          icon: FontAwesomeIcons.users,
-          route: '/users',
-        ),
-        MenuItem(
-          title: '系统设置',
-          icon: FontAwesomeIcons.sliders,
-          route: '/system',
-        ),
-      ],
-    ),
-    MenuGroup(
-      title: '业务管理',
-      icon: FontAwesomeIcons.briefcase,
-      gradient: const LinearGradient(
-        colors: [Color(0xFFFF9800), Color(0xFFFFB74D)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      items: [
-        MenuItem(
-          title: '客户管理',
-          icon: FontAwesomeIcons.userTie,
-          route: '/customers',
-        ),
-        MenuItem(
-          title: '商品管理',
-          icon: FontAwesomeIcons.boxOpen,
-          route: '/products',
-        ),
-        MenuItem(
-          title: '订单管理',
-          icon: FontAwesomeIcons.fileInvoice,
-          route: '/business/orders',
-        ),
-        MenuItem(
-          title: '合同管理',
-          icon: FontAwesomeIcons.fileContract,
-          route: '/business/contracts',
-        ),
-        MenuItem(
-          title: '项目管理',
-          icon: FontAwesomeIcons.projectDiagram,
-          route: '/business/projects',
-        ),
-      ],
-    ),
-    MenuGroup(
-      title: '财务管理',
-      icon: FontAwesomeIcons.chartPie,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF9C27B0), Color(0xFFBA68C8)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      items: [
-        MenuItem(
-          title: '财务概览',
-          icon: FontAwesomeIcons.coins,
-          route: '/finance',
-        ),
-      ],
-    ),
-    MenuGroup(
-      title: '库存管理',
-      icon: FontAwesomeIcons.warehouse,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF607D8B), Color(0xFF90A4AE)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      items: [
-        MenuItem(
-          title: '入库管理',
-          icon: FontAwesomeIcons.arrowDown,
-          route: '/inventory/inbound',
-        ),
-        MenuItem(
-          title: '出库管理',
-          icon: FontAwesomeIcons.arrowUp,
-          route: '/inventory/outbound',
-        ),
-        MenuItem(
-          title: '报损管理',
-          icon: FontAwesomeIcons.triangleExclamation,
-          route: '/inventory/loss',
-        ),
-        MenuItem(
-          title: '报溢管理',
-          icon: FontAwesomeIcons.plus,
-          route: '/inventory/overflow',
-        ),
-        MenuItem(
-          title: '盘点管理',
-          icon: FontAwesomeIcons.clipboardCheck,
-          route: '/inventory/stocktaking',
-        ),
-        MenuItem(
-          title: '调拨管理',
-          icon: FontAwesomeIcons.rightLeft,
-          route: '/inventory/transfer',
-        ),
-        MenuItem(
-          title: '退货管理',
-          icon: FontAwesomeIcons.rotateLeft,
-          route: '/inventory/return',
-        ),
-      ],
-    ),
-  ];
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouterState.of(context).matchedLocation;
     
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1A1A),
-        border: Border(
-          right: BorderSide(
-            color: Color(0xFF333333),
-            width: 1,
+    if (_isLoading) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A1A),
+          border: Border(
+            right: BorderSide(
+              color: Color(0xFF333333),
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: ListView.builder(
+        child: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+          ),
+        ),
+      );
+    }
+    
+    return RepaintBoundary(
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A1A),
+          border: Border(
+            right: BorderSide(
+              color: Color(0xFF333333),
+              width: 1,
+            ),
+          ),
+        ),
+        child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 16),
         itemCount: _menuGroups.length,
         itemBuilder: (context, index) {
@@ -182,9 +209,13 @@ class _SidebarMenuState extends State<SidebarMenu> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: group.items.length > 1 ? () {
-                      setState(() {
-                        _expandedGroup = isExpanded ? null : group.title;
-                      });
+                      // 只有在状态真正需要改变时才调用setState
+                      final newExpandedGroup = isExpanded ? null : group.title;
+                      if (_expandedGroup != newExpandedGroup) {
+                        setState(() {
+                          _expandedGroup = newExpandedGroup;
+                        });
+                      }
                     } : null,
                     borderRadius: BorderRadius.circular(6),
                     hoverColor: group.items.length > 1 ? Colors.white.withOpacity(0.03) : null,
@@ -248,7 +279,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(6),
                       child: InkWell(
-                        onTap: () => context.go(item.route),
+                        onTap: () => _handleMenuItemTap(item.route),
                         borderRadius: BorderRadius.circular(6),
                         hoverColor: Colors.white.withOpacity(0.05),
                         child: Container(
@@ -323,6 +354,7 @@ class _SidebarMenuState extends State<SidebarMenu> {
             ],
           );
         },
+        ),
       ),
     );
   }

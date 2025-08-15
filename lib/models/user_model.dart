@@ -1,31 +1,37 @@
 class UserModel {
-  final String id;
+  final int id;
   final String username;
-  final String name;
+  final String? name;
   final String email;
-  final String role;
-  final String status;
-  final DateTime createTime;
-  final DateTime lastLogin;
+  final String? role;
+  final String? status;
+  final bool isStaff;
+  final bool isSuperuser;
+  final DateTime? createTime;
+  final DateTime? lastLogin;
 
   UserModel({
     required this.id,
     required this.username,
-    required this.name,
+    this.name,
     required this.email,
-    required this.role,
-    required this.status,
-    required this.createTime,
-    required this.lastLogin,
+    this.role,
+    this.status,
+    required this.isStaff,
+    required this.isSuperuser,
+    this.createTime,
+    this.lastLogin,
   });
 
   UserModel copyWith({
-    String? id,
+    int? id,
     String? username,
     String? name,
     String? email,
     String? role,
     String? status,
+    bool? isStaff,
+    bool? isSuperuser,
     DateTime? createTime,
     DateTime? lastLogin,
   }) {
@@ -36,6 +42,8 @@ class UserModel {
       email: email ?? this.email,
       role: role ?? this.role,
       status: status ?? this.status,
+      isStaff: isStaff ?? this.isStaff,
+      isSuperuser: isSuperuser ?? this.isSuperuser,
       createTime: createTime ?? this.createTime,
       lastLogin: lastLogin ?? this.lastLogin,
     );
@@ -49,27 +57,31 @@ class UserModel {
       'email': email,
       'role': role,
       'status': status,
-      'createTime': createTime.toIso8601String(),
-      'lastLogin': lastLogin.toIso8601String(),
+      'is_staff': isStaff,
+      'is_superuser': isSuperuser,
+      'createTime': createTime?.toIso8601String(),
+      'lastLogin': lastLogin?.toIso8601String(),
     };
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
-      username: json['username'],
+      id: json['id'] ?? 0,
+      username: json['username'] ?? '',
       name: json['name'],
-      email: json['email'],
+      email: json['email'] ?? '',
       role: json['role'],
       status: json['status'],
-      createTime: DateTime.parse(json['createTime']),
-      lastLogin: DateTime.parse(json['lastLogin']),
+      isStaff: json['is_staff'] ?? false,
+      isSuperuser: json['is_superuser'] ?? false,
+      createTime: json['createTime'] != null ? DateTime.parse(json['createTime']) : null,
+      lastLogin: json['lastLogin'] != null ? DateTime.parse(json['lastLogin']) : null,
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, username: $username, name: $name, email: $email, role: $role, status: $status)';
+    return 'UserModel(id: $id, username: $username, name: $name, email: $email, role: $role, status: $status, isStaff: $isStaff, isSuperuser: $isSuperuser)';
   }
 
   @override

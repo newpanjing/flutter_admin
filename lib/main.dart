@@ -3,7 +3,12 @@ import 'dart:html' as html;
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // 初始化动态路由
+  await AppRouter.initializeDynamicRoutes();
+  
   runApp(const MyApp());
 }
 

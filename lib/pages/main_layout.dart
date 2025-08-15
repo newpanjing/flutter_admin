@@ -6,6 +6,8 @@ import '../widgets/sidebar_menu.dart';
 import '../widgets/settings_dialog.dart';
 import '../widgets/notification_dialog.dart';
 import '../routes/app_router.dart';
+import '../models/menu_model.dart';
+import '../services/api_service.dart';
 import 'vip_page.dart';
 
 class MainLayout extends StatefulWidget {
@@ -20,6 +22,27 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   bool _isCollapsed = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  MenuConfig? _menuConfig;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMenuConfig();
+  }
+
+  Future<void> _loadMenuConfig() async {
+    try {
+      final config = await ApiService.getMenuConfig();
+      if (mounted) {
+        setState(() {
+          _menuConfig = config;
+        });
+      }
+    } catch (e) {
+      // 静默处理错误，不影响页面正常显示
+      print('加载菜单配置失败: $e');
+    }
+  }
 
   // 功能模块搜索数据
   final List<Map<String, String>> _moduleList = [
@@ -166,79 +189,8 @@ class _MainLayoutState extends State<MainLayout> {
                     child: SidebarMenu(isCollapsed: _isCollapsed),
                   ),
                   
-                  // 底部用户信息
-                  Container(
-                    padding: EdgeInsets.all(_isCollapsed ? 8 : 16),
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        top: BorderSide(
-                          color: AppColors.sidebarHover,
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    child: _isCollapsed
-                        ? Center(
-                            child: Tooltip(
-                              message: '管理员 (admin)',
-                              child: GestureDetector(
-                                onTap: _logout,
-                                child: CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: AppTheme.primaryBlue,
-                                  child: const Icon(
-                                    Icons.person,
-                                    color: AppTheme.primaryWhite,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: AppTheme.primaryBlue,
-                                child: const Icon(
-                                  Icons.person,
-                                  color: AppTheme.primaryWhite,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '管理员',
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: AppTheme.primaryWhite,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Text(
-                                      'admin',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: _logout,
-                                icon: const Icon(
-                                  Icons.logout,
-                                  color: AppColors.textMuted,
-                                  size: 20,
-                                ),
-                                tooltip: '退出登录',
-                              ),
-                            ],
-                          ),
-                  ),
+                  // 底部留空，管理员信息已移至右上角
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -405,11 +357,99 @@ class _MainLayoutState extends State<MainLayout> {
                             tooltip: '设置',
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            DateTime.now().toString().substring(0, 16),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textSecondary,
+                          // 管理员信息
+                          PopupMenuButton<String>(
+                            offset: const Offset(-120, 40),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: AppTheme.primaryBlue,
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: AppTheme.primaryWhite,
+                                    size: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '管理员',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: AppColors.textSecondary,
+                                  size: 16,
+                                ),
+                              ],
                             ),
+                            itemBuilder: (context) => [
+                              PopupMenuItem<String>(
+                                enabled: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: AppTheme.primaryBlue,
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: AppTheme.primaryWhite,
+                                          size: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '管理员',
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            'admin',
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: AppColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const PopupMenuDivider(),
+                              PopupMenuItem<String>(
+                                value: 'logout',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.logout,
+                                      color: AppColors.textSecondary,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      '退出登录',
+                                      style: Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) {
+                              if (value == 'logout') {
+                                _logout();
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -468,9 +508,61 @@ class _MainLayoutState extends State<MainLayout> {
         return '业务管理 / 合同管理';
       case '/business/projects':
         return '业务管理 / 项目管理';
+      case '/vip':
+        return '会员管理 / VIP权益';
+      case '/menu-debug':
+        return '系统管理 / 菜单调试';
       default:
+        // 尝试从动态菜单中查找面包屑
+        String? dynamicBreadcrumb = _getDynamicBreadcrumb(location);
+        if (dynamicBreadcrumb != null) {
+          return dynamicBreadcrumb;
+        }
+        
+        // 对于404页面或其他未知路径
+        if (location.startsWith('/')) {
+          return '首页 / 页面未找到';
+        }
         return '首页';
     }
+  }
+  
+  String? _getDynamicBreadcrumb(String location) {
+    // 从菜单配置中查找匹配的路径
+    if (_menuConfig != null) {
+      for (var group in _menuConfig!.data.menus) {
+        String? breadcrumb = _findBreadcrumbInGroup(group, location, group.name);
+        if (breadcrumb != null) {
+          return breadcrumb;
+        }
+      }
+    }
+    return null;
+  }
+  
+  String? _findBreadcrumbInGroup(MenuItemConfig menu, String targetPath, String groupName) {
+    // 将菜单URL转换为路由路径进行比较
+    String menuPath = menu.url.startsWith('http') ? menu.url : menu.url;
+    if (menuPath.startsWith('/')) {
+      menuPath = menuPath.substring(1);
+    }
+    String routePath = '/$menuPath';
+    
+    if (routePath == targetPath) {
+      return '$groupName / ${menu.name}';
+    }
+    
+    // 递归查找子菜单
+    if (menu.children != null) {
+      for (var child in menu.children!) {
+        String? childBreadcrumb = _findBreadcrumbInGroup(child, targetPath, groupName);
+        if (childBreadcrumb != null) {
+          return childBreadcrumb;
+        }
+      }
+    }
+    
+    return null;
   }
 }
 
