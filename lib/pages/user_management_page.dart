@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_table_2/data_table_2.dart';
 import '../theme/app_theme.dart';
 import '../models/user_model.dart';
+import '../widgets/modern_dialog.dart';
 
 class UserManagementPage extends StatefulWidget {
   const UserManagementPage({super.key});
@@ -492,136 +493,118 @@ class _UserDialogState extends State<_UserDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SizedBox(
-        width: 400,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: '用户名',
-                  border: OutlineInputBorder(),
-                ),
+    return ModernDialog(
+      title: widget.title,
+      titleIcon: widget.user == null ? Icons.person_add : Icons.edit,
+      width: 500,
+      content: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            ModernFormField(
+              controller: _usernameController,
+              label: '用户名',
+              prefixIcon: Icons.person,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '请输入用户名';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            ModernFormField(
+              controller: _nameController,
+              label: '姓名',
+              prefixIcon: Icons.badge,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '请输入姓名';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            ModernFormField(
+              controller: _emailController,
+              label: '邮箱',
+              prefixIcon: Icons.email,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '请输入邮箱';
+                }
+                if (!value.contains('@')) {
+                  return '请输入有效的邮箱地址';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            if (widget.user == null) ...[
+              ModernFormField(
+                controller: _passwordController,
+                label: '密码',
+                prefixIcon: Icons.lock,
+                obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '请输入用户名';
+                    return '请输入密码';
+                  }
+                  if (value.length < 6) {
+                    return '密码长度至少6位';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '姓名',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请输入姓名';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: '邮箱',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请输入邮箱';
-                  }
-                  if (!value.contains('@')) {
-                    return '请输入有效的邮箱地址';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              if (widget.user == null)
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: '密码',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入密码';
-                    }
-                    if (value.length < 6) {
-                      return '密码长度至少6位';
-                    }
-                    return null;
-                  },
-                ),
-              if (widget.user == null) const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedRole,
-                      decoration: const InputDecoration(
-                        labelText: '角色',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: ['管理员', '经理', '员工']
-                          .map((role) => DropdownMenuItem(
-                                value: role,
-                                child: Text(role),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedRole = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedStatus,
-                      decoration: const InputDecoration(
-                        labelText: '状态',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: ['启用', '禁用']
-                          .map((status) => DropdownMenuItem(
-                                value: status,
-                                child: Text(status),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedStatus = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 20),
             ],
-          ),
+            Row(
+              children: [
+                Expanded(
+                  child: ModernDropdown<String>(
+                    value: _selectedRole,
+                    label: '角色',
+                    prefixIcon: Icons.admin_panel_settings,
+                    items: ['管理员', '经理', '员工'],
+                    itemBuilder: (role) => role,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedRole = value!;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: ModernDropdown<String>(
+                    value: _selectedStatus,
+                    label: '状态',
+                    prefixIcon: Icons.toggle_on,
+                    items: ['启用', '禁用'],
+                    itemBuilder: (status) => status,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedStatus = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       actions: [
-        TextButton(
+        ModernButton(
+          text: '取消',
+          type: ButtonType.secondary,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
         ),
-        ElevatedButton(
+        ModernButton(
+          text: '保存',
+          type: ButtonType.primary,
+          icon: Icons.save,
           onPressed: _saveUser,
-          child: const Text('保存'),
         ),
       ],
     );

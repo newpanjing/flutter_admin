@@ -72,6 +72,21 @@ class _SidebarMenuState extends State<SidebarMenu> {
           icon: FontAwesomeIcons.boxOpen,
           route: '/products',
         ),
+        MenuItem(
+          title: '订单管理',
+          icon: FontAwesomeIcons.fileInvoice,
+          route: '/business/orders',
+        ),
+        MenuItem(
+          title: '合同管理',
+          icon: FontAwesomeIcons.fileContract,
+          route: '/business/contracts',
+        ),
+        MenuItem(
+          title: '项目管理',
+          icon: FontAwesomeIcons.projectDiagram,
+          route: '/business/projects',
+        ),
       ],
     ),
     MenuGroup(
@@ -164,47 +179,48 @@ class _SidebarMenuState extends State<SidebarMenu> {
             children: [
               // 分组标题
               if (!widget.isCollapsed)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 3,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          gradient: group.gradient,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      FaIcon(
-                        group.icon,
-                        size: 14,
-                        color: Colors.white70,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          group.title,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            letterSpacing: 0.8,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: group.items.length > 1 ? () {
+                      setState(() {
+                        _expandedGroup = isExpanded ? null : group.title;
+                      });
+                    } : null,
+                    borderRadius: BorderRadius.circular(6),
+                    hoverColor: group.items.length > 1 ? Colors.white.withOpacity(0.03) : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 3,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              gradient: group.gradient,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
-                        ),
-                      ),
-                      if (group.items.length > 1)
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _expandedGroup = isExpanded ? null : group.title;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: AnimatedRotation(
+                          const SizedBox(width: 12),
+                          FaIcon(
+                            group.icon,
+                            size: 14,
+                            color: Colors.white70,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              group.title,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                          if (group.items.length > 1)
+                            AnimatedRotation(
                               turns: isExpanded ? 0.5 : 0,
                               duration: const Duration(milliseconds: 200),
                               child: const Icon(
@@ -213,9 +229,9 @@ class _SidebarMenuState extends State<SidebarMenu> {
                                 color: Colors.white54,
                               ),
                             ),
-                          ),
-                        ),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               

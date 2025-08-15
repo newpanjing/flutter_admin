@@ -101,7 +101,7 @@ class _NotificationDropdownState extends State<NotificationDropdown> {
       case 'backup':
         return Colors.orange;
       case 'user':
-        return Colors.purple;
+        return const Color(0xFF4CAF50); // 替换紫色为绿色
       case 'security':
         return Colors.red;
       default:

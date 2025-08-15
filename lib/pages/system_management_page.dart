@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/modern_dialog.dart';
 
 class SystemManagementPage extends StatefulWidget {
   const SystemManagementPage({super.key});
@@ -96,7 +97,7 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
               _buildConfigCard(
                 title: '备份设置',
                 icon: Icons.backup,
-                color: Colors.purple,
+                color: const Color(0xFF4CAF50), // 替换紫色为绿色
                 onTap: () => _showBackupDialog(),
               ),
               _buildConfigCard(
@@ -239,61 +240,53 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('基本信息设置'),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: '系统名称',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: companyController,
-                decoration: const InputDecoration(
-                  labelText: '公司名称',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: '公司地址',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: '联系电话',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: '联系邮箱',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
+      builder: (context) => ModernDialog(
+        title: '基本信息设置',
+        titleIcon: Icons.info_outline,
+        width: 500,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ModernFormField(
+              controller: nameController,
+              label: '系统名称',
+              prefixIcon: Icons.computer,
+            ),
+            const SizedBox(height: 20),
+            ModernFormField(
+              controller: companyController,
+              label: '公司名称',
+              prefixIcon: Icons.business,
+            ),
+            const SizedBox(height: 20),
+            ModernFormField(
+              controller: addressController,
+              label: '公司地址',
+              prefixIcon: Icons.location_on,
+            ),
+            const SizedBox(height: 20),
+            ModernFormField(
+              controller: phoneController,
+              label: '联系电话',
+              prefixIcon: Icons.phone,
+            ),
+            const SizedBox(height: 20),
+            ModernFormField(
+              controller: emailController,
+              label: '联系邮箱',
+              prefixIcon: Icons.email,
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
+          ModernButton(
+             text: '取消',
+             type: ButtonType.secondary,
+             onPressed: () => Navigator.of(context).pop(),
+           ),
+           ModernButton(
+             text: '保存',
+             type: ButtonType.primary,
             onPressed: () {
               setState(() {
                 _systemConfig['systemName'] = nameController.text;
@@ -305,7 +298,6 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
               Navigator.of(context).pop();
               _showSuccessMessage('基本信息已更新');
             },
-            child: const Text('保存'),
           ),
         ],
       ),
@@ -319,59 +311,125 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('安全设置'),
-          content: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+        builder: (context, setState) => ModernDialog(
+          title: '安全设置',
+          titleIcon: Icons.security,
+          width: 500,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                ),
+                child: Column(
                   children: [
-                    const Text('会话超时时间'),
-                    const Spacer(),
-                    Text('$sessionTimeout 分钟'),
+                    Row(
+                      children: [
+                        Icon(Icons.timer, color: AppTheme.primaryBlue, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('会话超时时间', style: TextStyle(fontWeight: FontWeight.w500)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.successGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            '$sessionTimeout 分钟',
+                            style: TextStyle(color: AppTheme.successGreen, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppTheme.successGreen,
+                        thumbColor: AppTheme.successGreen,
+                        overlayColor: AppTheme.successGreen.withOpacity(0.2),
+                      ),
+                      child: Slider(
+                        value: sessionTimeout.toDouble(),
+                        min: 5,
+                        max: 120,
+                        divisions: 23,
+                        onChanged: (value) {
+                          setState(() {
+                            sessionTimeout = value.round();
+                          });
+                        },
+                      ),
+                    ),
                   ],
                 ),
-                Slider(
-                  value: sessionTimeout.toDouble(),
-                  min: 5,
-                  max: 120,
-                  divisions: 23,
-                  onChanged: (value) {
-                    setState(() {
-                      sessionTimeout = value.round();
-                    });
-                  },
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
                 ),
-                const SizedBox(height: 16),
-                Row(
+                child: Column(
                   children: [
-                    const Text('最大登录尝试次数'),
-                    const Spacer(),
-                    Text('$maxLoginAttempts 次'),
+                    Row(
+                      children: [
+                        Icon(Icons.lock_outline, color: AppTheme.primaryBlue, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('最大登录尝试次数', style: TextStyle(fontWeight: FontWeight.w500)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningYellow.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            '$maxLoginAttempts 次',
+                            style: TextStyle(color: AppTheme.warningYellow, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppTheme.warningYellow,
+                        thumbColor: AppTheme.warningYellow,
+                        overlayColor: AppTheme.warningYellow.withOpacity(0.2),
+                      ),
+                      child: Slider(
+                        value: maxLoginAttempts.toDouble(),
+                        min: 3,
+                        max: 10,
+                        divisions: 7,
+                        onChanged: (value) {
+                          setState(() {
+                            maxLoginAttempts = value.round();
+                          });
+                        },
+                      ),
+                    ),
                   ],
                 ),
-                Slider(
-                  value: maxLoginAttempts.toDouble(),
-                  min: 3,
-                  max: 10,
-                  divisions: 7,
-                  onChanged: (value) {
-                    setState(() {
-                      maxLoginAttempts = value.round();
-                    });
-                  },
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           actions: [
-            TextButton(
+            ModernButton(
+              text: '取消',
+              type: ButtonType.secondary,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
             ),
-            ElevatedButton(
+            ModernButton(
+              text: '保存',
+              type: ButtonType.primary,
               onPressed: () {
                 this.setState(() {
                   _systemConfig['sessionTimeout'] = sessionTimeout;
@@ -380,7 +438,6 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
                 Navigator.of(context).pop();
                 _showSuccessMessage('安全设置已更新');
               },
-              child: const Text('保存'),
             ),
           ],
         ),
@@ -395,39 +452,121 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('通知设置'),
+        builder: (context, setState) => ModernDialog(
+          title: '通知设置',
+          titleIcon: Icons.notifications_outlined,
+          width: 500,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SwitchListTile(
-                title: const Text('邮件通知'),
-                subtitle: const Text('启用系统邮件通知功能'),
-                value: emailNotification,
-                onChanged: (value) {
-                  setState(() {
-                    emailNotification = value;
-                  });
-                },
-              ),
-              SwitchListTile(
-                title: const Text('短信通知'),
-                subtitle: const Text('启用系统短信通知功能'),
-                value: smsNotification,
-                onChanged: (value) {
-                  setState(() {
-                    smsNotification = value;
-                  });
-                },
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: emailNotification ? AppTheme.successGreen.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.email_outlined,
+                            color: emailNotification ? AppTheme.successGreen : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '邮件通知',
+                                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '启用系统邮件通知功能',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: emailNotification,
+                          onChanged: (value) {
+                            setState(() {
+                              emailNotification = value;
+                            });
+                          },
+                          activeColor: AppTheme.successGreen,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: smsNotification ? AppTheme.successGreen.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.sms_outlined,
+                            color: smsNotification ? AppTheme.successGreen : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '短信通知',
+                                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '启用系统短信通知功能',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: smsNotification,
+                          onChanged: (value) {
+                            setState(() {
+                              smsNotification = value;
+                            });
+                          },
+                          activeColor: AppTheme.successGreen,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(
+            ModernButton(
+              text: '取消',
+              type: ButtonType.secondary,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
             ),
-            ElevatedButton(
+            ModernButton(
+              text: '保存',
+              type: ButtonType.primary,
               onPressed: () {
                 this.setState(() {
                   _systemConfig['enableEmailNotification'] = emailNotification;
@@ -436,7 +575,6 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
                 Navigator.of(context).pop();
                 _showSuccessMessage('通知设置已更新');
               },
-              child: const Text('保存'),
             ),
           ],
         ),
@@ -451,50 +589,121 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('备份设置'),
+        builder: (context, setState) => ModernDialog(
+          title: '备份设置',
+          titleIcon: Icons.backup_outlined,
+          width: 500,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SwitchListTile(
-                title: const Text('自动备份'),
-                subtitle: const Text('启用系统自动备份功能'),
-                value: autoBackup,
-                onChanged: (value) {
-                  setState(() {
-                    autoBackup = value;
-                  });
-                },
-              ),
-              if (autoBackup) ...[
-                const SizedBox(height: 16),
-                Row(
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                ),
+                child: Column(
                   children: [
-                    const Text('备份间隔'),
-                    const Spacer(),
-                    Text('$backupInterval 小时'),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: autoBackup ? AppTheme.successGreen.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.backup,
+                            color: autoBackup ? AppTheme.successGreen : Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '自动备份',
+                                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '启用系统自动备份功能',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: autoBackup,
+                          onChanged: (value) {
+                            setState(() {
+                              autoBackup = value;
+                            });
+                          },
+                          activeColor: AppTheme.successGreen,
+                        ),
+                      ],
+                    ),
+                    if (autoBackup) ...[
+                      const SizedBox(height: 24),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, color: AppTheme.primaryBlue, size: 20),
+                          const SizedBox(width: 8),
+                          const Text('备份间隔', style: TextStyle(fontWeight: FontWeight.w500)),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              '$backupInterval 小时',
+                              style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: AppTheme.primaryBlue,
+                          thumbColor: AppTheme.primaryBlue,
+                          overlayColor: AppTheme.primaryBlue.withOpacity(0.2),
+                        ),
+                        child: Slider(
+                          value: backupInterval.toDouble(),
+                          min: 1,
+                          max: 168,
+                          divisions: 167,
+                          onChanged: (value) {
+                            setState(() {
+                              backupInterval = value.round();
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-                Slider(
-                  value: backupInterval.toDouble(),
-                  min: 1,
-                  max: 168,
-                  divisions: 167,
-                  onChanged: (value) {
-                    setState(() {
-                      backupInterval = value.round();
-                    });
-                  },
-                ),
-               ],
+              ),
             ],
           ),
           actions: [
-            TextButton(
+            ModernButton(
+              text: '取消',
+              type: ButtonType.secondary,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
             ),
-            ElevatedButton(
+            ModernButton(
+              text: '保存',
+              type: ButtonType.primary,
               onPressed: () {
                 this.setState(() {
                   _systemConfig['autoBackup'] = autoBackup;
@@ -503,7 +712,6 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
                 Navigator.of(context).pop();
                 _showSuccessMessage('备份设置已更新');
               },
-              child: const Text('保存'),
             ),
           ],
         ),
@@ -518,56 +726,87 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('日志设置'),
+        builder: (context, setState) => ModernDialog(
+          title: '日志设置',
+          titleIcon: Icons.description_outlined,
+          width: 500,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<String>(
-                value: logLevel,
-                decoration: const InputDecoration(
-                  labelText: '日志级别',
-                  border: OutlineInputBorder(),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
                 ),
-                items: ['DEBUG', 'INFO', 'WARN', 'ERROR']
-                    .map((level) => DropdownMenuItem(
-                          value: level,
-                          child: Text(level),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    logLevel = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Text('最大日志大小'),
-                  const Spacer(),
-                  Text('$maxLogSize MB'),
-                ],
-              ),
-              Slider(
-                value: maxLogSize.toDouble(),
-                min: 10,
-                max: 1000,
-                divisions: 99,
-                onChanged: (value) {
-                  setState(() {
-                    maxLogSize = value.round();
-                  });
-                },
+                child: Column(
+                  children: [
+                    ModernDropdown<String>(
+                      label: '日志级别',
+                      value: logLevel,
+                      items: ['DEBUG', 'INFO', 'WARN', 'ERROR'],
+                      itemBuilder: (level) => level,
+                      prefixIcon: Icons.bug_report,
+                      onChanged: (value) {
+                        setState(() {
+                          logLevel = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Icon(Icons.storage, color: AppTheme.primaryBlue, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('最大日志大小', style: TextStyle(fontWeight: FontWeight.w500)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningYellow.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            '$maxLogSize MB',
+                            style: TextStyle(color: AppTheme.warningYellow, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppTheme.warningYellow,
+                        thumbColor: AppTheme.warningYellow,
+                        overlayColor: AppTheme.warningYellow.withOpacity(0.2),
+                      ),
+                      child: Slider(
+                        value: maxLogSize.toDouble(),
+                        min: 10,
+                        max: 1000,
+                        divisions: 99,
+                        onChanged: (value) {
+                          setState(() {
+                            maxLogSize = value.round();
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(
+            ModernButton(
+              text: '取消',
+              type: ButtonType.secondary,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
             ),
-            ElevatedButton(
+            ModernButton(
+              text: '保存',
+              type: ButtonType.primary,
               onPressed: () {
                 this.setState(() {
                   _systemConfig['logLevel'] = logLevel;
@@ -576,7 +815,6 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
                 Navigator.of(context).pop();
                 _showSuccessMessage('日志设置已更新');
               },
-              child: const Text('保存'),
             ),
           ],
         ),
@@ -587,26 +825,40 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
   void _showMonitorDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('系统监控'),
-        content: SizedBox(
-          width: 500,
+      builder: (context) => ModernDialog(
+        title: '系统监控',
+        titleIcon: Icons.monitor_heart_outlined,
+        width: 600,
+        maxHeight: 500,
+        content: Container(
           height: 400,
           child: Column(
             children: [
-              _buildMonitorItem('CPU使用率', '45%', AppTheme.successGreen),
-              _buildMonitorItem('内存使用率', '68%', AppTheme.warningYellow),
-              _buildMonitorItem('磁盘使用率', '32%', AppTheme.successGreen),
-              _buildMonitorItem('网络流量', '1.2MB/s', AppTheme.primaryBlue),
-              _buildMonitorItem('数据库连接', '15/100', AppTheme.successGreen),
-              _buildMonitorItem('活跃会话', '12', AppTheme.primaryBlue),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildModernMonitorItem('CPU使用率', '45%', AppTheme.successGreen, Icons.memory, 0.45),
+                    const SizedBox(height: 12),
+                    _buildModernMonitorItem('内存使用率', '68%', AppTheme.warningYellow, Icons.storage, 0.68),
+                    const SizedBox(height: 12),
+                    _buildModernMonitorItem('磁盘使用率', '32%', AppTheme.successGreen, Icons.storage_outlined, 0.32),
+                    const SizedBox(height: 12),
+                    _buildModernMonitorItem('网络流量', '1.2MB/s', AppTheme.primaryBlue, Icons.network_check, 0.3),
+                    const SizedBox(height: 12),
+                    _buildModernMonitorItem('数据库连接', '15/100', AppTheme.successGreen, Icons.data_usage, 0.15),
+                    const SizedBox(height: 12),
+                    _buildModernMonitorItem('活跃会话', '12', AppTheme.primaryBlue, Icons.people, 0.2),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(
+          ModernButton(
+            text: '关闭',
+            type: ButtonType.secondary,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
           ),
         ],
       ),
@@ -634,6 +886,66 @@ class _SystemManagementPageState extends State<SystemManagementPage> {
             fontSize: 16,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildModernMonitorItem(String label, String value, Color color, IconData icon, double progress) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: color.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 6,
+          ),
+        ],
       ),
     );
   }

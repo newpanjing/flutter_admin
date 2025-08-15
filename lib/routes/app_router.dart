@@ -17,6 +17,9 @@ import '../pages/inventory/stocktaking_page.dart';
 import '../pages/inventory/transfer_page.dart';
 import '../pages/inventory/return_page.dart';
 import '../pages/vip_page.dart';
+import '../pages/business/order_management_page.dart';
+import '../pages/business/contract_management_page.dart';
+import '../pages/business/project_management_page.dart';
 
 class AppRouter {
   static bool _isLoggedIn = false;
@@ -32,14 +35,20 @@ class AppRouter {
       GoRoute(
         path: '/',
         name: 'loading',
-        builder: (context, state) => const LoadingPage(),
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const LoadingPage(),
+        ),
       ),
       
       // 登录页
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const LoginPage(),
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const LoginPage(),
+        ),
       ),
       
       // 主布局页面
@@ -50,98 +59,170 @@ class AppRouter {
           GoRoute(
             path: '/dashboard',
             name: 'dashboard',
-            builder: (context, state) => const DashboardPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const DashboardPage(),
+            ),
           ),
           
           // 用户管理
           GoRoute(
             path: '/users',
             name: 'users',
-            builder: (context, state) => const UserManagementPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const UserManagementPage(),
+            ),
           ),
           
           // 系统管理
           GoRoute(
             path: '/system',
             name: 'system',
-            builder: (context, state) => const SystemManagementPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const SystemManagementPage(),
+            ),
           ),
           
           // 客户管理
           GoRoute(
             path: '/customers',
             name: 'customers',
-            builder: (context, state) => const CustomerManagementPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const CustomerManagementPage(),
+            ),
           ),
           
           // 商品管理
           GoRoute(
             path: '/products',
             name: 'products',
-            builder: (context, state) => const ProductManagementPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const ProductManagementPage(),
+            ),
           ),
           
           // 财务管理
           GoRoute(
             path: '/finance',
             name: 'finance',
-            builder: (context, state) => const FinanceManagementPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const FinanceManagementPage(),
+            ),
           ),
           
           // VIP权益
           GoRoute(
             path: '/vip',
             name: 'vip',
-            builder: (context, state) => const VipPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const VipPage(),
+            ),
           ),
           
           // 库存管理 - 入库
           GoRoute(
             path: '/inventory/inbound',
             name: 'inbound',
-            builder: (context, state) => const InboundPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const InboundPage(),
+            ),
           ),
           
           // 库存管理 - 出库
           GoRoute(
             path: '/inventory/outbound',
             name: 'outbound',
-            builder: (context, state) => const OutboundPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const OutboundPage(),
+            ),
           ),
           
           // 库存管理 - 报损
           GoRoute(
             path: '/inventory/loss',
             name: 'loss',
-            builder: (context, state) => const LossPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const LossPage(),
+            ),
           ),
           
           // 库存管理 - 报溢
           GoRoute(
             path: '/inventory/overflow',
             name: 'overflow',
-            builder: (context, state) => const OverflowPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const OverflowPage(),
+            ),
           ),
           
           // 库存管理 - 盘点
           GoRoute(
             path: '/inventory/stocktaking',
             name: 'stocktaking',
-            builder: (context, state) => const StocktakingPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const StocktakingPage(),
+            ),
           ),
           
           // 库存管理 - 调拨
           GoRoute(
             path: '/inventory/transfer',
             name: 'transfer',
-            builder: (context, state) => const TransferPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const TransferPage(),
+            ),
           ),
           
           // 库存管理 - 退货
           GoRoute(
             path: '/inventory/return',
             name: 'return',
-            builder: (context, state) => const ReturnPage(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const ReturnPage(),
+            ),
+          ),
+          
+          // 业务管理 - 订单管理
+          GoRoute(
+            path: '/business/orders',
+            name: 'orders',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const OrderManagementPage(),
+            ),
+          ),
+          
+          // 业务管理 - 合同管理
+          GoRoute(
+            path: '/business/contracts',
+            name: 'contracts',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const ContractManagementPage(),
+            ),
+          ),
+          
+          // 业务管理 - 项目管理
+          GoRoute(
+            path: '/business/projects',
+            name: 'projects',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const ProjectManagementPage(),
+            ),
           ),
         ],
       ),

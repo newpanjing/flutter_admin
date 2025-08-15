@@ -13,7 +13,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
   final List<Color> _themeColors = [
     Colors.green,
     Colors.blue,
-    Colors.purple,
+    const Color(0xFF4CAF50), // 替换紫色为绿色
     Colors.orange,
     Colors.red,
     Colors.teal,

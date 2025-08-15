@@ -147,6 +147,7 @@ class AppColors {
   static const Color sidebarHover = Color(0xFF374151);
   static const Color sidebarActive = Color(0xFF1E3A8A);
   static const Color contentBackground = Color(0xFFF9FAFB);
+  static const Color backgroundGray = Color(0xFFF9FAFB);
   static const Color cardShadow = Color(0x1A000000);
   static const Color borderColor = Color(0xFFE5E7EB);
   static const Color textPrimary = Color(0xFF1F2937);

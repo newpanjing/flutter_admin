@@ -3,6 +3,7 @@ import 'package:data_table_2/data_table_2.dart';
 import '../theme/app_theme.dart';
 import '../models/customer_model.dart';
 import '../widgets/custom_dropdown.dart';
+import '../widgets/modern_dialog.dart';
 
 class CustomerManagementPage extends StatefulWidget {
   const CustomerManagementPage({super.key});
@@ -777,12 +778,13 @@ class _CustomerListViewState extends State<_CustomerListView> {
   void _showCustomerDetail(CustomerModel customer) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('客户详情 - ${customer.name}'),
-        content: SizedBox(
-          width: 500,
+      builder: (context) => ModernDialog(
+        title: '客户详情 - ${customer.name}',
+        titleIcon: Icons.person_outline,
+        width: 600,
+        maxHeight: 600,
+        content: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildDetailRow('客户名称', customer.name),
@@ -802,9 +804,10 @@ class _CustomerListViewState extends State<_CustomerListView> {
           ),
         ),
         actions: [
-          TextButton(
+          ModernButton(
+            text: '关闭',
+            type: ButtonType.secondary,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('关闭'),
           ),
         ],
       ),
@@ -847,15 +850,51 @@ class _CustomerListViewState extends State<_CustomerListView> {
   void _deleteCustomer(CustomerModel customer) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除客户 "${customer.name}" 吗？此操作不可撤销。'),
+      builder: (context) => ModernDialog(
+        title: '确认删除',
+        titleIcon: Icons.warning_amber_outlined,
+        width: 400,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+               padding: const EdgeInsets.all(16),
+               decoration: BoxDecoration(
+                 color: const Color(0xFFF44336).withOpacity(0.1),
+                 borderRadius: BorderRadius.circular(12),
+                 border: Border.all(color: const Color(0xFFF44336).withOpacity(0.3)),
+               ),
+               child: Row(
+                 children: [
+                   const Icon(
+                     Icons.delete_forever,
+                     color: Color(0xFFF44336),
+                     size: 24,
+                   ),
+                   const SizedBox(width: 12),
+                   Expanded(
+                     child: Text(
+                       '确定要删除客户 "${customer.name}" 吗？此操作不可撤销。',
+                       style: const TextStyle(
+                         fontSize: 14,
+                         color: AppColors.textPrimary,
+                       ),
+                     ),
+                   ),
+                 ],
+               ),
+             ),
+          ],
+        ),
         actions: [
-          TextButton(
+          ModernButton(
+            text: '取消',
+            type: ButtonType.secondary,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
           ),
-          ElevatedButton(
+          ModernButton(
+            text: '删除',
+            type: ButtonType.danger,
             onPressed: () {
               widget.onDeleteCustomer(customer.id);
               Navigator.of(context).pop();
@@ -866,10 +905,6 @@ class _CustomerListViewState extends State<_CustomerListView> {
                 ),
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF44336),
-            ),
-            child: const Text('删除'),
           ),
         ],
       ),
@@ -936,136 +971,127 @@ class _CustomerDialogState extends State<_CustomerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SizedBox(
-        width: 500,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: '客户名称',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入客户名称';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _contactController,
-                  decoration: const InputDecoration(
-                    labelText: '联系人',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入联系人';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: '联系电话',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入联系电话';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: '邮箱地址',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入邮箱地址';
-                    }
-                    if (!value.contains('@')) {
-                      return '请输入有效的邮箱地址';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(
-                    labelText: '客户地址',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入客户地址';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomDropdown<String>(
-                        value: _selectedType,
-                        items: _typeOptions,
-                        itemBuilder: (item) => item,
-                        label: '客户类型',
-                        prefixIcon: Icons.category_outlined,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedType = value!;
-                          });
-                        },
-                      ),
+    return ModernDialog(
+      title: widget.title,
+      titleIcon: widget.customer == null ? Icons.person_add : Icons.edit,
+      width: 600,
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              ModernFormField(
+                controller: _nameController,
+                label: '客户名称',
+                prefixIcon: Icons.business,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入客户名称';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ModernFormField(
+                controller: _contactController,
+                label: '联系人',
+                prefixIcon: Icons.person,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入联系人';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ModernFormField(
+                controller: _phoneController,
+                label: '联系电话',
+                prefixIcon: Icons.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入联系电话';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ModernFormField(
+                controller: _emailController,
+                label: '邮箱地址',
+                prefixIcon: Icons.email,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入邮箱地址';
+                  }
+                  if (!value.contains('@')) {
+                    return '请输入有效的邮箱地址';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ModernFormField(
+                controller: _addressController,
+                label: '客户地址',
+                prefixIcon: Icons.location_on,
+                maxLines: 2,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入客户地址';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: ModernDropdown<String>(
+                      value: _selectedType,
+                      items: _typeOptions,
+                      itemBuilder: (item) => item,
+                      label: '客户类型',
+                      prefixIcon: Icons.category_outlined,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedType = value!;
+                        });
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: CustomDropdown<String>(
-                        value: _selectedStatus,
-                        items: const ['活跃', '潜在', '休眠'],
-                        itemBuilder: (item) => item,
-                        label: '客户状态',
-                        prefixIcon: Icons.info_outline,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedStatus = value!;
-                          });
-                        },
-                      ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: ModernDropdown<String>(
+                      value: _selectedStatus,
+                      items: const ['活跃', '潜在', '休眠'],
+                      itemBuilder: (item) => item,
+                      label: '客户状态',
+                      prefixIcon: Icons.info_outline,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedStatus = value!;
+                        });
+                      },
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
       actions: [
-        TextButton(
+        ModernButton(
+          text: '取消',
+          type: ButtonType.secondary,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
         ),
-        ElevatedButton(
+        ModernButton(
+          text: '保存',
+          type: ButtonType.primary,
+          icon: Icons.save,
           onPressed: _saveCustomer,
-          child: const Text('保存'),
         ),
       ],
     );
