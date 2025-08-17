@@ -416,3 +416,58 @@ class _NotificationDropdownState extends State<NotificationDropdown> {
     );
   }
 }
+
+/// 通知对话框类
+class NotificationDialog extends StatelessWidget {
+  final String title;
+  final String content;
+  final VoidCallback? onConfirm;
+  final VoidCallback? onCancel;
+
+  const NotificationDialog({
+    super.key,
+    required this.title,
+    required this.content,
+    this.onConfirm,
+    this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(title),
+      content: Text(content),
+      actions: [
+        if (onCancel != null)
+          TextButton(
+            onPressed: onCancel,
+            child: const Text('取消'),
+          ),
+        if (onConfirm != null)
+          TextButton(
+            onPressed: onConfirm,
+            child: const Text('确定'),
+          ),
+      ],
+    );
+  }
+
+  /// 显示通知对话框
+  static Future<bool?> show({
+    required BuildContext context,
+    required String title,
+    required String content,
+    VoidCallback? onConfirm,
+    VoidCallback? onCancel,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => NotificationDialog(
+        title: title,
+        content: content,
+        onConfirm: onConfirm ?? () => Navigator.of(context).pop(true),
+        onCancel: onCancel ?? () => Navigator.of(context).pop(false),
+      ),
+    );
+  }
+}

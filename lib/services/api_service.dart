@@ -146,6 +146,18 @@ class ApiService {
     }
   }
 
+  /// 获取当前用户信息
+  Future<UserModel?> getCurrentUser() async {
+    try {
+      // 这里可以从本地存储获取token，然后调用getUserInfo
+      // 暂时返回null，实际项目中需要实现token管理
+      return null;
+    } catch (e) {
+      print('获取当前用户信息失败: $e');
+      return null;
+    }
+  }
+
   /// 注册用户
   Future<RegisterResponse> register({
     required String username,

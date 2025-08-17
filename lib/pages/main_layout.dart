@@ -1,21 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../theme/app_theme.dart';
-import '../widgets/sidebar_menu.dart';
+import '../services/api_service.dart';
+import '../models/user_model.dart';
 import '../widgets/settings_dialog.dart';
 import '../widgets/notification_dialog.dart';
-import '../routes/app_router.dart';
-import '../models/menu_model.dart';
-import '../models/user_model.dart';
-import '../services/api_service.dart';
-import '../utils/route_state_manager.dart';
-import 'vip_page.dart';
+
+import '../widgets/sidebar_menu.dart';
+
+class AppColors {
+  static const Color primaryBlue = Color(0xFF2196F3);
+  static const Color primaryWhite = Color(0xFFFFFFFF);
+  static const Color lightGray = Color(0xFFF5F5F5);
+  static const Color darkGray = Color(0xFF757575);
+  static const Color textPrimary = Color(0xFF212121);
+  static const Color textSecondary = Color(0xFF757575);
+  static const Color textMuted = Color(0xFF9E9E9E);
+  static const Color borderColor = Color(0xFFE0E0E0);
+  static const Color cardShadow = Color(0x1A000000);
+}
 
 class MainLayout extends StatefulWidget {
   final Widget child;
-  
-  const MainLayout({super.key, required this.child});
+
+  const MainLayout({Key? key, required this.child}) : super(key: key);
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -23,52 +31,9 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   bool _isCollapsed = false;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  MenuConfig? _menuConfig;
   UserModel? _currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMenuConfig();
-    _loadCurrentUser();
-  }
-
-  Future<void> _loadMenuConfig() async {
-    try {
-      final config = await ApiService.getMenuConfig();
-      if (mounted) {
-        setState(() {
-          _menuConfig = config;
-        });
-      }
-    } catch (e) {
-      // 静默处理错误，不影响页面正常显示
-      print('加载菜单配置失败: $e');
-    }
-  }
-
-  Future<void> _loadCurrentUser() async {
-    // 模拟获取当前登录用户信息
-    // 在实际项目中，这里应该从API或本地存储获取用户信息
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      setState(() {
-        _currentUser = UserModel(
-          id: 1,
-          username: 'admin',
-          name: '张三',
-          email: 'admin@example.com',
-          role: '系统管理员',
-          status: 'active',
-          isStaff: true,
-          isSuperuser: true,
-          createTime: DateTime.now().subtract(const Duration(days: 30)),
-          lastLogin: DateTime.now(),
-        );
-      });
-    }
-  }
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, String>> _filteredModules = [];
 
   // 功能模块搜索数据
   final List<Map<String, String>> _moduleList = [
@@ -95,138 +60,208 @@ class _MainLayoutState extends State<MainLayout> {
     {'name': 'VIP权益', 'route': '/vip', 'category': '会员管理'},
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
+    _filteredModules = List.from(_moduleList);
+    _searchController.addListener(_filterModules);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _loadCurrentUser() async {
+    try {
+      final user = await ApiService().getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+        });
+      }
+    } catch (e) {
+      print('加载用户信息失败: $e');
+    }
+  }
+
   void _toggleSidebar() {
     setState(() {
       _isCollapsed = !_isCollapsed;
     });
   }
 
+  void _logout() {
+    context.go('/login');
+  }
+
+  void _navigateToProfile() {
+    context.go('/profile');
+  }
+
+  void _filterModules() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredModules = _moduleList.where((module) {
+        return module['name']!.toLowerCase().contains(query) ||
+            module['category']!.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
   void _showSearchDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => _SearchDialog(moduleList: _moduleList),
-    );
-  }
-
-  void _logout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认退出'),
-        content: const Text('您确定要退出系统吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              AppRouter.setLoginStatus(false);
-              context.go('/login');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorRed,
-            ),
-            child: const Text('退出'),
-          ),
-        ],
+      builder: (context) => _SearchDialog(
+        searchController: _searchController,
+        filteredModules: _filteredModules,
+        onNavigate: _navigateToModule,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // 监听路由变化并保存状态
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentLocation = GoRouterState.of(context).matchedLocation;
-      AppRouter.saveCurrentLocation(currentLocation);
-      RouteStateManager.saveRouteState(currentLocation);
-    });
-    
     return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.contentBackground,
+      backgroundColor: AppColors.lightGray,
       body: Row(
         children: [
-          // 左侧菜单栏
+          // 左侧边栏
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            width: _isCollapsed ? 70 : 250,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: AppColors.sidebar,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cardShadow,
-                    blurRadius: 10,
-                    offset: Offset(2, 0),
-                  ),
+            width: _isCollapsed ? 80 : 280,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppTheme.primaryBlue,
+                  AppTheme.primaryBlue.withValues(alpha: 0.8),
                 ],
               ),
-              child: Column(
-                children: [
-                  // 顶部Logo区域
-                  Container(
-                    height: 70,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: const BoxDecoration(
-                      color: AppTheme.primaryBlue,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.cardShadow,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(2, 0),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // 顶部Logo区域
+                ClipRect(
+                  child: Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppTheme.primaryBlue.withValues(alpha: 0.9),
+                          AppTheme.primaryBlue,
+                        ],
+                      ),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: AppTheme.primaryWhite.withValues(alpha: 0.2),
+                          width: 1,
                         ),
-                      ],
+                      ),
                     ),
-                    child: _isCollapsed
-                        ? Center(
-                            child: IconButton(
-                              onPressed: _toggleSidebar,
-                              icon: const Icon(
-                                Icons.menu_open,
-                                color: AppTheme.primaryWhite,
-                              ),
-                            ),
-                          )
-                        : Row(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final showText = constraints.maxWidth >= 180;
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
-                                Icons.business,
-                                color: AppTheme.primaryWhite,
-                                size: 32,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'ERP系统',
-                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: AppTheme.primaryWhite,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryBlue.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.business_center,
+                                  color: AppTheme.primaryBlue,
+                                  size: 28,
                                 ),
                               ),
-                              IconButton(
-                                onPressed: _toggleSidebar,
-                                icon: const Icon(
-                                  Icons.menu,
-                                  color: AppTheme.primaryWhite,
+                              if (showText) const SizedBox(width: 12),
+                              if (showText)
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'ERP系统',
+                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                          color: AppTheme.primaryWhite,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      Text(
+                                        '企业资源管理',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: AppTheme.primaryWhite.withValues(alpha: 0.7),
+                                          fontSize: 11,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(width: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryWhite.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppTheme.primaryWhite.withValues(alpha: 0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: IconButton(
+                                  onPressed: _toggleSidebar,
+                                  icon: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Icon(
+                                      _isCollapsed ? Icons.menu_open : Icons.menu,
+                                      key: ValueKey(_isCollapsed),
+                                      color: AppTheme.primaryWhite,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  tooltip: _isCollapsed ? '展开菜单' : '收起菜单',
+                                  splashColor: AppTheme.primaryWhite.withValues(alpha: 0.1),
+                                  highlightColor: AppTheme.primaryWhite.withValues(alpha: 0.05),
                                 ),
                               ),
                             ],
-                          ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                  
-                  // 菜单列表
-                  Expanded(
-                    child: SidebarMenu(isCollapsed: _isCollapsed),
-                  ),
-                  
-                  // 底部留空，管理员信息已移至右上角
-                  const SizedBox(height: 16),
-                ],
-              ),
+                ),
+                
+                // 菜单列表
+                Expanded(
+                  child: SidebarMenu(isCollapsed: _isCollapsed),
+                ),
+                
+                // 底部留空
+                const SizedBox(height: 16),
+              ],
             ),
           ),
           
@@ -237,14 +272,14 @@ class _MainLayoutState extends State<MainLayout> {
                 // 顶部导航栏
                 Container(
                   height: 70,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  decoration: const BoxDecoration(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
                     color: AppTheme.primaryWhite,
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.cardShadow,
                         blurRadius: 4,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -254,7 +289,7 @@ class _MainLayoutState extends State<MainLayout> {
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.location_on_outlined,
                               size: 20,
                               color: AppColors.textSecondary,
@@ -284,6 +319,7 @@ class _MainLayoutState extends State<MainLayout> {
                             ),
                             tooltip: '搜索功能',
                           ),
+                          // 通知按钮
                           PopupMenuButton<String>(
                             offset: const Offset(0, 40),
                             color: Colors.transparent,
@@ -316,67 +352,17 @@ class _MainLayoutState extends State<MainLayout> {
                             itemBuilder: (context) => [
                               PopupMenuItem<String>(
                                 enabled: false,
-                                padding: EdgeInsets.zero,
-                                child: const NotificationDropdown(),
+                                child: Container(
+                                    width: 300,
+                                    child: const NotificationDialog(
+                                      title: '通知',
+                                      content: '暂无新通知',
+                                    ),
+                                  ),
                               ),
                             ],
                           ),
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF00C853), Color(0xFF4CAF50)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF00C853).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(20),
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const VipPage(),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.diamond,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Text(
-                                        'VIP',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                          // 设置按钮
                           IconButton(
                             onPressed: () {
                               showDialog(
@@ -391,7 +377,7 @@ class _MainLayoutState extends State<MainLayout> {
                             tooltip: '设置',
                           ),
                           const SizedBox(width: 8),
-                          // 管理员信息
+                          // 用户信息
                           PopupMenuButton<String>(
                             offset: const Offset(-140, 50),
                             child: Row(
@@ -462,6 +448,23 @@ class _MainLayoutState extends State<MainLayout> {
                               ),
                               const PopupMenuDivider(),
                               PopupMenuItem<String>(
+                                value: 'profile',
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.person_outline,
+                                      color: AppColors.textSecondary,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      '个人中心',
+                                      style: Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem<String>(
                                 value: 'logout',
                                 child: Row(
                                   children: [
@@ -480,7 +483,9 @@ class _MainLayoutState extends State<MainLayout> {
                               ),
                             ],
                             onSelected: (value) {
-                              if (value == 'logout') {
+                              if (value == 'profile') {
+                                _navigateToProfile();
+                              } else if (value == 'logout') {
                                 _logout();
                               }
                             },
@@ -505,7 +510,7 @@ class _MainLayoutState extends State<MainLayout> {
       ),
     );
   }
-  
+
   String _getBreadcrumb(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     
@@ -513,138 +518,90 @@ class _MainLayoutState extends State<MainLayout> {
       case '/dashboard':
         return '首页 / 仪表板';
       case '/users':
-        return '系统管理 / 用户管理';
+        return '首页 / 系统管理 / 用户管理';
       case '/system':
-        return '系统管理 / 系统设置';
-      case '/customers':
-        return '业务管理 / 客户管理';
-      case '/products':
-        return '业务管理 / 商品管理';
-      case '/finance':
-        return '财务管理 / 财务概览';
-      case '/inventory/inbound':
-        return '库存管理 / 入库管理';
-      case '/inventory/outbound':
-        return '库存管理 / 出库管理';
-      case '/inventory/loss':
-        return '库存管理 / 报损管理';
-      case '/inventory/overflow':
-        return '库存管理 / 报溢管理';
-      case '/inventory/stocktaking':
-        return '库存管理 / 盘点管理';
-      case '/inventory/transfer':
-        return '库存管理 / 调拨管理';
-      case '/inventory/return':
-        return '库存管理 / 退货管理';
-      case '/business/orders':
-        return '业务管理 / 订单管理';
-      case '/business/contracts':
-        return '业务管理 / 合同管理';
-      case '/business/projects':
-        return '业务管理 / 项目管理';
-      case '/vip':
-        return '会员管理 / VIP权益';
+        return '首页 / 系统管理 / 系统设置';
       case '/menu-debug':
-        return '系统管理 / 菜单调试';
+        return '首页 / 系统管理 / 菜单调试';
+      case '/customers':
+        return '首页 / 业务管理 / 客户管理';
+      case '/products':
+        return '首页 / 业务管理 / 商品管理';
+      case '/business/orders':
+        return '首页 / 业务管理 / 订单管理';
+      case '/business/contracts':
+        return '首页 / 业务管理 / 合同管理';
+      case '/business/projects':
+        return '首页 / 业务管理 / 项目管理';
+      case '/finance':
+        return '首页 / 财务管理 / 财务概览';
+      case '/finance/income-expense':
+        return '首页 / 财务管理 / 收支管理';
+      case '/finance/invoice':
+        return '首页 / 财务管理 / 发票管理';
+      case '/finance/report':
+        return '首页 / 财务管理 / 报表分析';
+      case '/inventory/inbound':
+        return '首页 / 库存管理 / 入库管理';
+      case '/inventory/outbound':
+        return '首页 / 库存管理 / 出库管理';
+      case '/inventory/loss':
+        return '首页 / 库存管理 / 报损管理';
+      case '/inventory/overflow':
+        return '首页 / 库存管理 / 报溢管理';
+      case '/inventory/stocktaking':
+        return '首页 / 库存管理 / 盘点管理';
+      case '/inventory/transfer':
+        return '首页 / 库存管理 / 调拨管理';
+      case '/inventory/return':
+        return '首页 / 库存管理 / 退货管理';
+      case '/vip':
+        return '首页 / 会员管理 / VIP权益';
       default:
-        // 尝试从动态菜单中查找面包屑
-        String? dynamicBreadcrumb = _getDynamicBreadcrumb(location);
-        if (dynamicBreadcrumb != null) {
-          return dynamicBreadcrumb;
-        }
-        
-        // 对于404页面或其他未知路径
-        if (location.startsWith('/')) {
-          return '首页 / 页面未找到';
-        }
         return '首页';
     }
   }
-  
+
   String? _getDynamicBreadcrumb(String location) {
-    // 从菜单配置中查找匹配的路径
-    if (_menuConfig != null) {
-      for (var group in _menuConfig!.data.menus) {
-        String? breadcrumb = _findBreadcrumbInGroup(group, location, group.name);
-        if (breadcrumb != null) {
-          return breadcrumb;
-        }
-      }
-    }
+    // 这里可以根据动态菜单数据生成面包屑
     return null;
-  }
-  
-  String? _findBreadcrumbInGroup(MenuItemConfig menu, String targetPath, String groupName) {
-    // 将菜单URL转换为路由路径进行比较
-    String menuPath = menu.url.startsWith('http') ? menu.url : menu.url;
-    if (menuPath.startsWith('/')) {
-      menuPath = menuPath.substring(1);
-    }
-    String routePath = '/$menuPath';
-    
-    if (routePath == targetPath) {
-      return '$groupName / ${menu.name}';
-    }
-    
-    // 递归查找子菜单
-    if (menu.children != null) {
-      for (var child in menu.children!) {
-        String? childBreadcrumb = _findBreadcrumbInGroup(child, targetPath, groupName);
-        if (childBreadcrumb != null) {
-          return childBreadcrumb;
-        }
-      }
-    }
-    
-    return null;
-  }
-}
-
-class _SearchDialog extends StatefulWidget {
-  final List<Map<String, String>> moduleList;
-  
-  const _SearchDialog({required this.moduleList});
-
-  @override
-  State<_SearchDialog> createState() => _SearchDialogState();
-}
-
-class _SearchDialogState extends State<_SearchDialog> {
-  final TextEditingController _searchController = TextEditingController();
-  List<Map<String, String>> _filteredModules = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _filteredModules = widget.moduleList;
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredModules = widget.moduleList;
-      } else {
-        _filteredModules = widget.moduleList.where((module) {
-          return module['name']!.toLowerCase().contains(query) ||
-                 module['category']!.toLowerCase().contains(query);
-        }).toList();
-      }
-    });
   }
 
   void _navigateToModule(String route) {
     Navigator.of(context).pop();
     context.go(route);
   }
+
+  IconData _getModuleIcon(String category) {
+    switch (category) {
+      case '首页':
+        return Icons.dashboard;
+      case '系统管理':
+        return Icons.settings;
+      case '业务管理':
+        return Icons.business;
+      case '财务管理':
+        return Icons.account_balance;
+      case '库存管理':
+        return Icons.inventory;
+      case '会员管理':
+        return Icons.people;
+      default:
+        return Icons.folder;
+    }
+  }
+}
+
+class _SearchDialog extends StatelessWidget {
+  final TextEditingController searchController;
+  final List<Map<String, String>> filteredModules;
+  final Function(String) onNavigate;
+
+  const _SearchDialog({
+    required this.searchController,
+    required this.filteredModules,
+    required this.onNavigate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -658,7 +615,7 @@ class _SearchDialogState extends State<_SearchDialog> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -688,7 +645,7 @@ class _SearchDialogState extends State<_SearchDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
-                      controller: _searchController,
+                      controller: searchController,
                       autofocus: true,
                       decoration: const InputDecoration(
                         hintText: '搜索功能模块...',
@@ -717,12 +674,12 @@ class _SearchDialogState extends State<_SearchDialog> {
             
             // 搜索结果
             Flexible(
-              child: _filteredModules.isEmpty
+              child: filteredModules.isEmpty
                   ? Container(
                       padding: const EdgeInsets.all(40),
                       child: Column(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.search_off,
                             size: 48,
                             color: AppColors.textMuted,
@@ -740,15 +697,15 @@ class _SearchDialogState extends State<_SearchDialog> {
                   : ListView.builder(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: _filteredModules.length,
+                      itemCount: filteredModules.length,
                       itemBuilder: (context, index) {
-                        final module = _filteredModules[index];
+                        final module = filteredModules[index];
                         return ListTile(
                           leading: Container(
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryBlue.withOpacity(0.1),
+                              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -768,50 +725,13 @@ class _SearchDialogState extends State<_SearchDialog> {
                             module['category']!,
                             style: const TextStyle(
                               color: AppColors.textMuted,
-                              fontSize: 12,
                             ),
                           ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                            color: AppColors.textMuted,
-                          ),
-                          onTap: () => _navigateToModule(module['route']!),
-                          hoverColor: AppColors.sidebarHover,
+                          onTap: () => onNavigate(module['route']!),
                         );
                       },
                     ),
             ),
-            
-            // 底部提示
-            if (_filteredModules.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: AppColors.borderColor,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: AppColors.textMuted,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '点击项目快速导航到对应功能',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
@@ -831,9 +751,9 @@ class _SearchDialogState extends State<_SearchDialog> {
       case '库存管理':
         return Icons.inventory;
       case '会员管理':
-        return Icons.diamond;
+        return Icons.people;
       default:
-        return Icons.apps;
+        return Icons.folder;
     }
   }
 }

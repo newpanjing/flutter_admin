@@ -123,7 +123,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
    void _resetSearch() {
      setState(() {
        _searchController.clear();
-       _selectedCategory = '全部';
+       _selectedCategory = '全部类别';
        _filteredProducts = List.from(_products);
      });
    }

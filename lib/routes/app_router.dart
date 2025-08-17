@@ -8,6 +8,7 @@ import '../pages/login_page.dart';
 import '../pages/main_layout.dart';
 import '../pages/menu_debug_page.dart';
 import '../pages/not_found_page.dart';
+import '../pages/profile_page.dart';
 import '../pages/test_hot_reload_page.dart';
 import '../pages/vip_page.dart';
 import '../widgets/data_table.dart';
@@ -248,6 +249,16 @@ class AppRouter {
             pageBuilder: (context, state) => NoTransitionPage(
               key: state.pageKey,
               child: const TestHotReloadPage(),
+            ),
+          ),
+
+          // 个人中心页面
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const ProfilePage(),
             ),
           ),
 
