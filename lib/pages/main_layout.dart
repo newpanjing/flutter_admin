@@ -172,84 +172,161 @@ class _MainLayoutState extends State<MainLayout> {
                       ),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final showText = constraints.maxWidth >= 180;
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryBlue.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  Icons.business_center,
-                                  color: AppTheme.primaryBlue,
-                                  size: 28,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: _isCollapsed ? 8 : 16, 
+                        vertical: 12
+                      ),
+                      child: _isCollapsed 
+                        ? Center(
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryWhite.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: AppTheme.primaryWhite.withValues(alpha: 0.2),
+                                  width: 1,
                                 ),
                               ),
-                              if (showText) const SizedBox(width: 12),
-                              if (showText)
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'ERP系统',
-                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                          color: AppTheme.primaryWhite,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                      Text(
-                                        '企业资源管理',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: AppTheme.primaryWhite.withValues(alpha: 0.7),
-                                          fontSize: 11,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ],
-                                  ),
+                              child: IconButton(
+                                onPressed: _toggleSidebar,
+                                icon: Icon(
+                                  Icons.menu_open,
+                                  color: AppTheme.primaryWhite,
+                                  size: 16,
                                 ),
-                              const SizedBox(width: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryWhite.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppTheme.primaryWhite.withValues(alpha: 0.2),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: IconButton(
-                                  onPressed: _toggleSidebar,
-                                  icon: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 200),
+                                tooltip: '展开菜单',
+                                padding: EdgeInsets.zero,
+                                splashColor: AppTheme.primaryWhite.withValues(alpha: 0.1),
+                                highlightColor: AppTheme.primaryWhite.withValues(alpha: 0.05),
+                              ),
+                            ),
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final availableWidth = constraints.maxWidth;
+                              final showFullLayout = availableWidth > 200;
+                              final isVeryNarrow = availableWidth < 100;
+                              
+                              if (isVeryNarrow) {
+                                 // 极窄模式：垂直布局
+                                 return Column(
+                                   mainAxisAlignment: MainAxisAlignment.center,
+                                   children: [
+                                     Container(
+                                       padding: const EdgeInsets.all(4),
+                                       decoration: BoxDecoration(
+                                         color: AppTheme.primaryWhite.withValues(alpha: 0.15),
+                                         borderRadius: BorderRadius.circular(6),
+                                       ),
+                                       child: Icon(
+                                         Icons.business_center,
+                                         color: AppTheme.primaryWhite,
+                                         size: 16,
+                                       ),
+                                     ),
+                                     const SizedBox(height: 4),
+                                     Container(
+                                       width: 32,
+                                       height: 32,
+                                       decoration: BoxDecoration(
+                                         color: AppTheme.primaryWhite.withValues(alpha: 0.15),
+                                         borderRadius: BorderRadius.circular(6),
+                                         border: Border.all(
+                                           color: AppTheme.primaryWhite.withValues(alpha: 0.2),
+                                           width: 1,
+                                         ),
+                                       ),
+                                       child: IconButton(
+                                         onPressed: _toggleSidebar,
+                                         icon: Icon(
+                                           Icons.menu_open,
+                                           color: AppTheme.primaryWhite,
+                                           size: 16,
+                                         ),
+                                         tooltip: '展开菜单',
+                                         padding: EdgeInsets.zero,
+                                         splashColor: AppTheme.primaryWhite.withValues(alpha: 0.1),
+                                         highlightColor: AppTheme.primaryWhite.withValues(alpha: 0.05),
+                                       ),
+                                     ),
+                                   ],
+                                 );
+                               }
+                              
+                              return Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(showFullLayout ? 8 : 6),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryWhite.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(showFullLayout ? 10 : 8),
+                                    ),
                                     child: Icon(
-                                      _isCollapsed ? Icons.menu_open : Icons.menu,
-                                      key: ValueKey(_isCollapsed),
+                                      Icons.business_center,
                                       color: AppTheme.primaryWhite,
-                                      size: 20,
+                                      size: showFullLayout ? 28 : 20,
                                     ),
                                   ),
-                                  tooltip: _isCollapsed ? '展开菜单' : '收起菜单',
-                                  splashColor: AppTheme.primaryWhite.withValues(alpha: 0.1),
-                                  highlightColor: AppTheme.primaryWhite.withValues(alpha: 0.05),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
+                                  if (showFullLayout) const SizedBox(width: 12),
+                                  if (showFullLayout) Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'ERP系统',
+                                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                            color: AppTheme.primaryWhite,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                        Text(
+                                          '企业资源管理',
+                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: AppTheme.primaryWhite.withValues(alpha: 0.7),
+                                            fontSize: 11,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (showFullLayout) const SizedBox(width: 8) else const Spacer(),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryWhite.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: AppTheme.primaryWhite.withValues(alpha: 0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: IconButton(
+                                      onPressed: _toggleSidebar,
+                                      icon: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 200),
+                                        child: Icon(
+                                          _isCollapsed ? Icons.menu_open : Icons.menu,
+                                          key: ValueKey(_isCollapsed),
+                                          color: AppTheme.primaryWhite,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      tooltip: _isCollapsed ? '展开菜单' : '收起菜单',
+                                      splashColor: AppTheme.primaryWhite.withValues(alpha: 0.1),
+                                      highlightColor: AppTheme.primaryWhite.withValues(alpha: 0.05),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                     ),
                   ),
                 ),

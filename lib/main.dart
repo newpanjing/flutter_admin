@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:html' as html;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
 import 'controllers/settings_controller.dart';
+import 'package:flutter/foundation.dart';
+import 'utils/web_utils.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,11 +42,13 @@ Future<void> _restoreRouterState() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
+
   @override
   Widget build(BuildContext context) {
-    // 在第一帧渲染完成后触发flutter-initialized事件
+    // 在第一帧渲染完成后触发flutter-initialized事件（仅Web平台）
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      html.window.dispatchEvent(html.CustomEvent('flutter-initialized'));
+      WebUtils.triggerFlutterInitializedEvent();
     });
     
     return GetBuilder<SettingsController>(

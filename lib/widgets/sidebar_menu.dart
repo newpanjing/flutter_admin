@@ -241,10 +241,13 @@ class _SidebarMenuState extends State<SidebarMenu> {
                     borderRadius: BorderRadius.circular(6),
                     hoverColor: group.items.length > 1 ? Colors.white.withOpacity(0.03) : null,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: widget.isCollapsed ? 8 : 20, 
+                        vertical: 12
+                      ),
                       child: Row(
                         children: [
-                          Container(
+                          if (!widget.isCollapsed) Container(
                             width: 3,
                             height: 16,
                             decoration: BoxDecoration(
@@ -252,14 +255,14 @@ class _SidebarMenuState extends State<SidebarMenu> {
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          if (!widget.isCollapsed) const SizedBox(width: 12),
                           FaIcon(
                             group.icon,
-                            size: 14,
+                            size: widget.isCollapsed ? 16 : 14,
                             color: Colors.white70,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
+                          if (!widget.isCollapsed) const SizedBox(width: 8),
+                          if (!widget.isCollapsed) Expanded(
                             child: Text(
                               group.title,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -268,6 +271,8 @@ class _SidebarMenuState extends State<SidebarMenu> {
                                 fontSize: 15,
                                 letterSpacing: 0.8,
                               ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           if (group.items.length > 1)
@@ -338,15 +343,15 @@ class _SidebarMenuState extends State<SidebarMenu> {
                                 )
                               : Row(
                                   children: [
-                                    const SizedBox(width: 15),
+                                    SizedBox(width: widget.isCollapsed ? 4 : 15),
                                     FaIcon(
                                       item.icon,
-                                      size: 16,
+                                      size: widget.isCollapsed ? 14 : 16,
                                       color: isActive 
                                           ? const Color(0xFF4CAF50)
                                           : Colors.white70,
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: widget.isCollapsed ? 4 : 12),
                                     Expanded(
                                       child: Text(
                                         item.title,
@@ -357,8 +362,10 @@ class _SidebarMenuState extends State<SidebarMenu> {
                                           fontWeight: isActive 
                                               ? FontWeight.w500 
                                               : FontWeight.normal,
-                                          fontSize: 14,
+                                          fontSize: widget.isCollapsed ? 12 : 14,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
                                       ),
                                     ),
                                   ],
