@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:html' as html;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
+import 'controllers/settings_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 初始化GetX
+  Get.put(SettingsController());
   
   // 初始化动态路由
   await AppRouter.initializeDynamicRoutes();
@@ -43,13 +48,17 @@ class MyApp extends StatelessWidget {
       html.window.dispatchEvent(html.CustomEvent('flutter-initialized'));
     });
     
-    return MaterialApp.router(
-      title: 'ERP管理系统',
-      theme: AppTheme.lightTheme,
-      routerConfig: AppRouter.router,
-      debugShowCheckedModeBanner: false,
-      // 启用状态恢复，支持hot reload后保持页面状态
-      restorationScopeId: 'main_app',
+    return GetBuilder<SettingsController>(
+      builder: (controller) => MaterialApp.router(
+        title: 'ERP管理系统',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: controller.themeMode,
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
+        // 启用状态恢复，支持hot reload后保持页面状态
+        restorationScopeId: 'main_app',
+      ),
     );
   }
 }

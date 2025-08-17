@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../theme/app_theme.dart';
-
+import '../models/user_model.dart';
+import '../controllers/settings_controller.dart';
 import '../services/api_service.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -426,30 +428,123 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
-                                    _buildSecurityItem(
-                                      '通知设置',
-                                      '管理系统通知偏好',
-                                      Icons.notifications_none,
-                                      () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('通知设置功能开发中'),
-                                          ),
-                                        );
-                                      },
+                                    // 暗黑模式切换
+                                    GetBuilder<SettingsController>(
+                                      builder: (controller) => _buildSettingItem(
+                                        '暗黑模式',
+                                        '切换到暗黑主题',
+                                        Icons.dark_mode,
+                                        Switch(
+                                          value: controller.isDarkMode,
+                                          onChanged: (value) {
+                                            controller.updateDarkMode(value);
+                                          },
+                                          activeColor: AppTheme.primaryBlue,
+                                        ),
+                                      ),
                                     ),
                                     const SizedBox(height: 12),
-                                    _buildSecurityItem(
-                                      '主题设置',
-                                      '切换系统主题风格',
-                                      Icons.palette,
-                                      () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('主题设置功能开发中'),
-                                          ),
-                                        );
-                                      },
+                                    
+                                    // 主题色选择
+                                    GetBuilder<SettingsController>(
+                                      builder: (controller) => _buildSettingItem(
+                                        '主题色',
+                                        '选择系统主题颜色',
+                                        Icons.palette,
+                                        DropdownButton<String>(
+                                           value: controller.currentPrimaryColor,
+                                           onChanged: (String? newValue) {
+                                             if (newValue != null) {
+                                               controller.updatePrimaryColor(newValue);
+                                             }
+                                           },
+                                           items: controller.availableColorKeys.map<DropdownMenuItem<String>>((String value) {
+                                             return DropdownMenuItem<String>(
+                                               value: value,
+                                               child: Row(
+                                                 mainAxisSize: MainAxisSize.min,
+                                                 children: [
+                                                   Container(
+                                                     width: 16,
+                                                     height: 16,
+                                                     decoration: BoxDecoration(
+                                                       color: controller.getColorByName(value),
+                                                       shape: BoxShape.circle,
+                                                     ),
+                                                   ),
+                                                   const SizedBox(width: 8),
+                                                   Text(controller.getColorDisplayName(value)),
+                                                 ],
+                                               ),
+                                             );
+                                           }).toList(),
+                                         ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    
+                                    // 字体大小选择
+                                    GetBuilder<SettingsController>(
+                                      builder: (controller) => _buildSettingItem(
+                                        '字体大小',
+                                        '调整系统字体大小',
+                                        Icons.text_fields,
+                                        DropdownButton<String>(
+                                          value: controller.currentFontSize,
+                                          onChanged: (String? newValue) {
+                                            if (newValue != null) {
+                                              controller.updateFontSize(newValue);
+                                            }
+                                          },
+                                          items: controller.availableFontSizeKeys.map<DropdownMenuItem<String>>((String value) {
+                                             return DropdownMenuItem<String>(
+                                               value: value,
+                                               child: Text(controller.getFontSizeDisplayName(value)),
+                                             );
+                                           }).toList(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    
+                                    // 语言选择
+                                    GetBuilder<SettingsController>(
+                                      builder: (controller) => _buildSettingItem(
+                                        '语言',
+                                        '选择系统语言',
+                                        Icons.language,
+                                        DropdownButton<String>(
+                                          value: controller.currentLanguage,
+                                          onChanged: (String? newValue) {
+                                            if (newValue != null) {
+                                              controller.updateLanguage(newValue);
+                                            }
+                                          },
+                                          items: controller.availableLanguageKeys.map<DropdownMenuItem<String>>((String value) {
+                                             return DropdownMenuItem<String>(
+                                               value: value,
+                                               child: Text(controller.getLanguageDisplayName(value)),
+                                             );
+                                           }).toList(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    
+                                    // 重置设置按钮
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () {
+                                          _showResetSettingsDialog();
+                                        },
+                                        icon: const Icon(Icons.restore),
+                                        label: const Text('重置设置'),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.orange,
+                                          side: const BorderSide(color: Colors.orange),
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -559,6 +654,49 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
   
+  Widget _buildSettingItem(
+    String title,
+    String subtitle,
+    IconData icon,
+    Widget control,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: Colors.grey.shade600,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          control,
+        ],
+      ),
+    );
+  }
+  
   void _showChangePasswordDialog() {
     final oldPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
@@ -652,6 +790,39 @@ class _ProfilePageState extends State<ProfilePage> {
               foregroundColor: Colors.white,
             ),
             child: const Text('确认修改'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showResetSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('重置设置'),
+        content: const Text('确定要将所有设置重置为默认值吗？此操作不可撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.find<SettingsController>().resetSettings();
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('设置已重置为默认值'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('确认重置'),
           ),
         ],
       ),

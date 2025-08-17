@@ -40,6 +40,7 @@ dependencies:
   
   # 状态管理
   provider: ^6.1.2
+  get: ^4.6.6
   
   # 本地存储
   shared_preferences: ^2.2.2
