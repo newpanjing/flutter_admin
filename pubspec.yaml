@@ -48,6 +48,9 @@ dependencies:
   # HTTP请求
   dio: ^5.4.0
   
+  # Toast提示
+  oktoast: ^3.4.0
+  
   # 图标库
   font_awesome_flutter: ^10.6.0
   

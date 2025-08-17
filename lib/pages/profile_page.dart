@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../models/user_model.dart';
 import '../controllers/settings_controller.dart';
 import '../services/api_service.dart';
+import '../utils/toast_utils.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -87,21 +88,11 @@ class _ProfilePageState extends State<ProfilePage> {
       });
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('个人信息保存成功'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccess('个人信息保存成功');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('保存失败，请重试'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showError('保存失败，请重试');
       }
     } finally {
       setState(() {
@@ -222,11 +213,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         TextButton.icon(
                                           onPressed: () {
                                             // 头像上传功能
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('头像上传功能开发中'),
-                                              ),
-                                            );
+                                            ToastUtils.showInfo('头像上传功能开发中');
                                           },
                                           icon: const Icon(Icons.camera_alt),
                                           label: const Text('更换头像'),
@@ -385,11 +372,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       '查看最近的登录记录',
                                       Icons.history,
                                       () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('登录日志功能开发中'),
-                                          ),
-                                        );
+                                        ToastUtils.showInfo('登录日志功能开发中');
                                       },
                                     ),
                                   ],
@@ -777,12 +760,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('密码修改成功'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                ToastUtils.showSuccess('密码修改成功');
               }
             },
             style: ElevatedButton.styleFrom(
@@ -811,12 +789,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () {
               Get.find<SettingsController>().resetSettings();
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('设置已重置为默认值'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              ToastUtils.showSuccess('设置已重置为默认值');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,

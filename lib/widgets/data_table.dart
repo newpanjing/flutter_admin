@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
+import '../utils/toast_utils.dart';
 
 class ProductDataTable extends StatefulWidget {
   const ProductDataTable({super.key});
@@ -154,9 +155,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
   // 批量删除
   void _batchDelete() {
     if (_selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先选择要删除的商品')),
-      );
+      ToastUtils.showWarning('请先选择要删除的商品');
       return;
     }
     
@@ -185,9 +184,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
                 _selectAll = false;
               });
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('删除成功')),
-              );
+              ToastUtils.showSuccess('删除成功');
             },
             child: const Text('删除'),
           ),
@@ -265,12 +262,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
             onPressed: () {
               Navigator.pop(context);
               // 模拟导入成功
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('导入成功！已添加 5 个商品'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              ToastUtils.showSuccess('导入成功！已添加 5 个商品');
               // 这里可以添加实际的导入逻辑
               _addMockImportedProducts();
             },
@@ -423,12 +415,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
             onPressed: () {
               Navigator.pop(context);
               // 模拟导出成功
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('导出成功！已导出为 $formatName 格式，共 ${_filteredProducts.length} 条数据'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              ToastUtils.showSuccess('导出成功！已导出为 $formatName 格式，共 ${_filteredProducts.length} 条数据');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1976D2),
@@ -540,12 +527,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
             onPressed: () {
               Navigator.pop(context);
               // 模拟导出成功
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('导出成功！已导出 ${_filteredProducts.length} 条商品数据'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              ToastUtils.showSuccess('导出成功！已导出 ${_filteredProducts.length} 条商品数据');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1976D2),
@@ -677,12 +659,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
             onPressed: () {
               Navigator.pop(context);
               // 模拟打印成功
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('打印任务已发送！共 ${_filteredProducts.length} 条商品数据'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              ToastUtils.showSuccess('打印任务已发送！共 ${_filteredProducts.length} 条商品数据');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1976D2),
@@ -1550,12 +1527,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
                   });
 
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isEditing ? '商品更新成功' : '商品添加成功'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  ToastUtils.showSuccess(isEditing ? '商品更新成功' : '商品添加成功');
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -1572,32 +1544,17 @@ class _ProductDataTableState extends State<ProductDataTable> {
 
   bool _validateProductForm(String name, String price, String stock) {
     if (name.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入商品名称'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtils.showError('请输入商品名称');
       return false;
     }
 
     if (double.tryParse(price) == null || double.parse(price) <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入有效的价格'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtils.showError('请输入有效的价格');
       return false;
     }
 
     if (int.tryParse(stock) == null || int.parse(stock) < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入有效的库存数量'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtils.showError('请输入有效的库存数量');
       return false;
     }
 
@@ -1622,12 +1579,7 @@ class _ProductDataTableState extends State<ProductDataTable> {
                 _performSearch(); // 重新过滤数据
               });
               Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('商品删除成功'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              ToastUtils.showSuccess('商品删除成功');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
-import '../routes/app_router.dart';
 import '../services/api_service.dart';
+import '../routes/app_router.dart';
+import '../utils/toast_utils.dart';
 import '../config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -131,12 +132,7 @@ class _LoginPageState extends State<LoginPage> {
         AppRouter.setLoginStatus(true);
         if (mounted) {
           // 显示成功消息
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(loginResponse.message),
-              backgroundColor: AppTheme.successGreen,
-            ),
-          );
+          ToastUtils.showSuccess(loginResponse.message);
           // 获取之前保存的路由位置，如果没有则跳转到dashboard
           final lastLocation = AppRouter.getLastKnownLocation();
           final targetLocation = (lastLocation != null && lastLocation != '/login') 
@@ -147,12 +143,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         // 登录失败，显示错误信息
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(loginResponse.message),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          ToastUtils.showError(loginResponse.message);
         }
       }
     } catch (e) {
@@ -163,12 +154,7 @@ class _LoginPageState extends State<LoginPage> {
           errorMessage = e.userFriendlyMessage;
         }
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        ToastUtils.showError(errorMessage);
       }
     } finally {
       if (mounted) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/toast_utils.dart';
 
 class SettingsDialog extends StatefulWidget {
   const SettingsDialog({super.key});
@@ -324,13 +325,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                       // 保存设置
                       _saveSettings();
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('设置已保存'),
-                          backgroundColor: _selectedThemeColor,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      ToastUtils.showSuccess('设置已保存');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _selectedThemeColor,

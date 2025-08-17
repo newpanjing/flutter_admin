@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
+import 'package:oktoast/oktoast.dart';
 import 'routes/app_router.dart';
 import 'theme/app_theme.dart';
 import 'controllers/settings_controller.dart';
@@ -52,15 +53,18 @@ class MyApp extends StatelessWidget {
     });
     
     return GetBuilder<SettingsController>(
-      builder: (controller) => MaterialApp.router(
-        title: 'ERP管理系统',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: controller.themeMode,
-        routerConfig: AppRouter.router,
-        debugShowCheckedModeBanner: false,
-        // 启用状态恢复，支持hot reload后保持页面状态
-        restorationScopeId: 'main_app',
+      builder: (controller) => OKToast(
+        position: ToastPosition.top,
+        child: MaterialApp.router(
+          title: 'ERP管理系统',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: controller.themeMode,
+          routerConfig: AppRouter.router,
+          debugShowCheckedModeBanner: false,
+          // 启用状态恢复，支持hot reload后保持页面状态
+          restorationScopeId: 'main_app',
+        ),
       ),
     );
   }
