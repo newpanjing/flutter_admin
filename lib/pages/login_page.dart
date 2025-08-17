@@ -187,12 +187,7 @@ class _LoginPageState extends State<LoginPage> {
       if (registerResponse.success) {
         // 注册成功
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(registerResponse.message),
-              backgroundColor: AppTheme.successGreen,
-            ),
-          );
+          ToastUtils.showSuccess(registerResponse.message);
           // 切换到登录模式
           setState(() {
             _isRegisterMode = false;
@@ -206,12 +201,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         // 注册失败
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(registerResponse.message),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
+          ToastUtils.showError(registerResponse.message);
         }
       }
     } catch (e) {
@@ -222,12 +212,7 @@ class _LoginPageState extends State<LoginPage> {
           errorMessage = e.userFriendlyMessage;
         }
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        ToastUtils.showError(errorMessage);
       }
     } finally {
       if (mounted) {
